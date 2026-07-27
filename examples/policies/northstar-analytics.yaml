@@ -1,0 +1,95 @@
+# Reference policy — Northstar Commerce analytics workspace.
+#
+# This is the annotated example. Copy it to `.zence/policy.yaml` in a client
+# repository and change the identifiers. Validate with:
+#
+#     zence policy validate .zence/policy.yaml
+#
+# Everything below `rules:` is optional. Omit it entirely and the workspace
+# inherits Zence's twelve built-in rules, which is the right starting point.
+
+policy_version: "1.0.0"
+workspace_id: northstar-analytics
+
+# audit   — evaluate and record, never block. Start here when onboarding.
+# enforce — allow, ask, and deny for real.
+# demo    — same engine, same hook path, synthetic catalog.
+mode: enforce
+
+# --- The boundary ------------------------------------------------------------
+# This is the whole point. `allowed_domains` defines what "in bounds" means; an
+# asset in any other domain, or in no domain at all, is outside it.
+
+active_client: Northstar Commerce
+active_domain: "urn:li:domain:northstar-commerce"
+
+allowed_domains:
+  - "urn:li:domain:northstar-commerce"
+
+# Environments this workspace is allowed to touch without being asked. PROD is
+# deliberately absent: production work should be a decision, not a default.
+allowed_environments:
+  - DEV
+  - QA
+
+# --- Classification ----------------------------------------------------------
+# Referenced from rules as $sensitive_tags and $protected_terms, so the lists
+# are maintained in one place rather than repeated across a dozen conditions.
+
+sensitive_tags:
+  - "urn:li:tag:PII"
+  - "urn:li:tag:Confidential"
+
+protected_terms:
+  - "urn:li:glossaryTerm:PersonalData"
+
+# Assets whose breakage would be felt by someone other than you. ZR-008 asks
+# before any change that DataHub lineage says reaches one of these.
+critical_downstream:
+  - "urn:li:dashboard:(looker,northstar_revenue)"
+
+# --- Local rules -------------------------------------------------------------
+# Workspace rules are merged with the built-in set. A rule sharing an id with a
+# built-in one replaces it, so you can retune a single rule without forking all
+# twelve.
+#
+# Conditions are ANDed. There is no OR — write two rules instead, which also
+# makes the audit record say which branch fired.
+
+rules:
+  # An example of tightening: this workspace treats the customer-facing schema
+  # as production regardless of how the environment is labelled.
+  - id: ZR-101
+    title: Customer-facing schema requires review
+    decision: ask
+    risk: high
+    min_confidence: high
+    when:
+      asset.name: { matches: "northstar\\.customer_facing\\..*" }
+      action.intent: { intersects: ["write", "mutate"] }
+    explanation: >-
+      {asset.name} is in the customer-facing schema. Changes there are visible
+      to end users as soon as they land.
+    remediation: >-
+      Confirm this has been reviewed, or make the change in a staging schema
+      first.
+    required_approver: workspace_owner
+
+# --- Exceptions --------------------------------------------------------------
+# A time-boxed downgrade of one ASK rule for one asset or domain.
+#
+# Two constraints, both enforced at load time:
+#   * `expires_at` is mandatory and must carry a timezone offset. An exception
+#     without an expiry is a policy change wearing a disguise.
+#   * An exception may only target an ASK rule. A DENY cannot be waived here —
+#     `zence policy validate` rejects the file if you try.
+
+exceptions:
+  - rule_id: ZR-002
+    scope:
+      urn: "urn:li:dataset:(urn:li:dataPlatform:snowflake,shared.dim_date,PROD)"
+    expires_at: "2026-12-31T23:59:59+02:00"
+    approver: "amir@zence.site"
+    reason: >-
+      Shared date dimension. Lives in another domain for historical reasons and
+      contains no client data.

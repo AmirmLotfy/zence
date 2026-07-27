@@ -1,0 +1,210 @@
+# Zence built-in rules.
+#
+# A workspace policy inherits these unless it sets `extends_builtin: false`. A
+# workspace rule with the same id replaces the built-in one, so you can retune a
+# rule without forking the whole set.
+#
+# Conditions are ANDed. There is no OR: a rule that needs one is written as two
+# rules, which also makes the audit record say which branch fired.
+#
+# Two identifiers in this series are engine behaviour rather than rules, and are
+# reserved so the numbering stays stable:
+#
+#   ZR-012  an active, unexpired exception downgraded an ASK to ALLOW
+#   ZR-013  an exception existed but had expired, so its rule applied normally
+#
+# Both are implemented in engine.py and covered by tests/unit/test_exceptions.py.
+# They are not listed below because inventing rule entries for them would put
+# behaviour in a file that does not control it.
+
+rules:
+  # --- Deny ------------------------------------------------------------------
+
+  - id: ZR-001
+    title: Cross-client PII access
+    decision: deny
+    risk: critical
+    min_confidence: high
+    when:
+      asset.in_domain: { equals: false }
+      asset.all_tags: { intersects: "$sensitive_tags" }
+    explanation: >-
+      {asset.name} belongs to {asset.domain_name}, but this session is bounded to
+      {active_client}. It carries {matched_tags}, and columns {matched_columns} are
+      classified at field level. Reading it here would move another client's
+      personal data into this workspace.
+    remediation: >-
+      Use an asset inside {active_client}. If you genuinely need to work on
+      {asset.domain_name}, switch to that client's workspace so the correct
+      boundary applies.
+
+  - id: ZR-003
+    title: Cross-client write
+    decision: deny
+    risk: critical
+    min_confidence: high
+    when:
+      asset.in_domain: { equals: false }
+      action.intent: { intersects: ["write", "mutate", "destructive"] }
+    explanation: >-
+      This operation writes to {asset.name}, which belongs to
+      {asset.domain_name}. This session is bounded to {active_client} and may not
+      modify another client's assets.
+    remediation: >-
+      Target an asset inside {active_client}, or switch workspace if you meant to
+      work on {asset.domain_name}.
+
+  - id: ZR-005
+    title: Destructive production mutation
+    decision: deny
+    risk: critical
+    min_confidence: medium
+    when:
+      asset.environment: { equals: "PROD" }
+      action.intent: { intersects: ["destructive"] }
+    explanation: >-
+      This is a destructive operation against {asset.name} in PROD. Dropping,
+      truncating, or deleting production data is not something Zence will approve
+      from inside an agent session.
+    remediation: >-
+      Run this against a development copy, or perform it deliberately outside
+      Claude Code with a reviewed migration and a backup in place.
+
+  - id: ZR-014
+    title: Attempt to modify Zence configuration
+    decision: deny
+    risk: critical
+    when:
+      action.targets_zence_config: { equals: true }
+    explanation: >-
+      This action modifies Zence's own policy or hook configuration ({paths}).
+      Changing the boundary from inside the session it governs is not permitted.
+    remediation: >-
+      Edit `.zence/policy.yaml` outside a governed session and review the diff
+      before committing it.
+
+  # --- Ask -------------------------------------------------------------------
+
+  - id: ZR-002
+    title: Cross-client read
+    decision: ask
+    risk: high
+    min_confidence: high
+    when:
+      asset.in_domain: { equals: false }
+      action.intent: { intersects: ["read", "search", "codegen"] }
+    explanation: >-
+      {asset.name} belongs to {asset.domain_name}, outside this session's
+      boundary of {active_client}. It carries no sensitive classification, so this
+      may be intentional — but it is still another client's asset.
+    remediation: >-
+      Approve only if this asset is genuinely shared. Otherwise use an equivalent
+      inside {active_client}.
+
+  - id: ZR-008
+    title: Critical downstream impact
+    decision: ask
+    risk: high
+    min_confidence: medium
+    when:
+      asset.downstream_critical_count: { gte: 1 }
+      action.intent: { intersects: ["write", "mutate", "destructive"] }
+    explanation: >-
+      Changing {asset.name} affects {downstream_critical_count} asset(s) the
+      workspace has marked critical: {downstream_critical}. DataHub lineage shows
+      the dependency; the change itself may still be correct.
+    remediation: >-
+      Review the downstream consumers before approving, and tell their owners
+      ({asset.owners}) if the change alters semantics rather than implementation.
+    required_approver: workspace_owner
+
+  - id: ZR-004
+    title: Production mutation
+    decision: ask
+    risk: high
+    min_confidence: medium
+    when:
+      asset.environment: { equals: "PROD" }
+      action.intent: { intersects: ["write", "mutate"] }
+    explanation: >-
+      This modifies {asset.name} in PROD. It is inside {active_client} and not
+      destructive, but it is production.
+    remediation: >-
+      Confirm this is meant to run against production rather than a development
+      copy.
+    required_approver: workspace_owner
+
+  - id: ZR-007
+    title: Unowned sensitive asset
+    decision: ask
+    risk: medium
+    min_confidence: high
+    when:
+      asset.owners: { exists: false }
+      asset.all_tags: { intersects: "$sensitive_tags" }
+    explanation: >-
+      {asset.name} carries {matched_tags} but has no owner recorded in DataHub,
+      so there is nobody to check with about appropriate use.
+    remediation: >-
+      Assign an owner in DataHub. Until then, treat the classification as
+      authoritative and the access rules as unknown.
+
+  - id: ZR-006
+    title: Deprecated asset
+    decision: ask
+    risk: medium
+    min_confidence: high
+    when:
+      asset.lifecycle: { equals: "deprecated" }
+    explanation: >-
+      {asset.name} is marked deprecated in DataHub. Building on it means building
+      on something its owners have signalled is going away.
+    remediation: >-
+      Check DataHub for the replacement asset and use that instead.
+
+  - id: ZR-011
+    title: Unresolved asset in a sensitive operation
+    decision: ask
+    risk: medium
+    min_confidence: medium
+    when:
+      asset.resolved: { equals: false }
+      action.is_sensitive: { equals: true }
+    explanation: >-
+      Zence could not resolve {asset.raw} in DataHub, and this operation writes or
+      mutates data. It cannot confirm which client the asset belongs to.
+    remediation: >-
+      Check the identifier for a typo, or register the asset in DataHub so it can
+      be evaluated automatically next time.
+
+  # --- Allow -----------------------------------------------------------------
+  #
+  # Explicit allows exist so the common safe path produces a named rule in the
+  # audit trail rather than falling through to the default. "Allowed by ZR-009"
+  # is a far more useful record than "nothing objected".
+
+  - id: ZR-009
+    title: In-boundary development read
+    decision: allow
+    risk: none
+    min_confidence: medium
+    when:
+      asset.in_domain: { equals: true }
+      asset.environment: { in: "$allowed_environments" }
+      action.intent: { intersects: ["read", "search"] }
+    explanation: >-
+      {asset.name} is inside {active_client} in {asset.environment}, which this
+      workspace permits.
+
+  - id: ZR-010
+    title: In-boundary code generation
+    decision: allow
+    risk: low
+    min_confidence: medium
+    when:
+      asset.in_domain: { equals: true }
+      action.intent: { intersects: ["codegen"] }
+      asset.all_tags: { not_intersects: "$sensitive_tags" }
+    explanation: >-
+      Generating code against {asset.name}, which is inside {active_client} and
+      carries no sensitive classification.
