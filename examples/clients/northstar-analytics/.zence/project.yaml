@@ -1,0 +1,6 @@
+# How this workspace reaches DataHub.
+#
+# No token here, ever. It comes from the environment — the Zence plugin stores
+# it in your system keychain and exports it to the hook.
+datahub:
+  url: http://localhost:8080

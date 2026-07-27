@@ -1,0 +1,32 @@
+# Northstar Commerce analytics workspace.
+#
+# This is the repository the demo scenarios run inside. Open Claude Code here
+# and Zence bounds the session to Northstar — BluePeak Health lives in the same
+# DataHub instance and is out of reach.
+
+policy_version: "1.0.0"
+workspace_id: northstar-analytics
+mode: enforce
+
+active_client: Northstar Commerce
+active_domain: "urn:li:domain:northstar-commerce"
+
+allowed_domains:
+  - "urn:li:domain:northstar-commerce"
+
+# PROD is absent on purpose. Production work should be a decision, not a default.
+allowed_environments:
+  - DEV
+  - QA
+
+sensitive_tags:
+  - "urn:li:tag:PII"
+  - "urn:li:tag:Confidential"
+
+protected_terms:
+  - "urn:li:glossaryTerm:PersonalData"
+
+# Reviewed weekly outside the data team, which is what makes an unannounced
+# change to its inputs expensive. This is what ZR-008 protects.
+critical_downstream:
+  - "urn:li:dashboard:(looker,northstar_revenue)"

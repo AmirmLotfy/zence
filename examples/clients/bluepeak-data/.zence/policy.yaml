@@ -1,0 +1,28 @@
+# BluePeak Health workspace.
+#
+# The mirror image. A session opened here is bounded to BluePeak, and Northstar
+# is what it cannot reach. Two directories on one laptop, two boundaries — which
+# is the situation Zence exists for.
+
+policy_version: "1.0.0"
+workspace_id: bluepeak-data
+mode: enforce
+
+active_client: BluePeak Health
+active_domain: "urn:li:domain:bluepeak-health"
+
+allowed_domains:
+  - "urn:li:domain:bluepeak-health"
+
+allowed_environments:
+  - DEV
+  - QA
+
+sensitive_tags:
+  - "urn:li:tag:PII"
+  - "urn:li:tag:Confidential"
+
+protected_terms:
+  - "urn:li:glossaryTerm:PersonalData"
+
+critical_downstream: []

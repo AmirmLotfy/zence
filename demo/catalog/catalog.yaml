@@ -1,0 +1,235 @@
+# Zence demo catalog — two fictional clients sharing one DataHub instance.
+#
+# Everything here is synthetic and safe to publish. No real company, person,
+# email, or dataset is represented. That is not incidental: a demo for a tool
+# about not leaking client data should not itself ship anyone's data.
+#
+# The catalog is shaped to make each rule demonstrable with a real asset rather
+# than a contrived one:
+#
+#   ZR-001  bluepeak.patient_contacts   cross-client, PII at column level
+#   ZR-002  bluepeak.shared_dim_date    cross-client, genuinely harmless
+#   ZR-006  northstar.dim_customer_legacy   deprecated, with a named replacement
+#   ZR-007  northstar.campaign_costs    sensitive and unowned
+#   ZR-008  northstar.fct_revenue_daily → the critical revenue dashboard
+#   ZR-009  northstar.dim_customer      in-domain, DEV
+#
+# Seed with:  zence demo seed
+# Verify with: zence demo verify
+
+platform: snowflake
+
+domains:
+  - id: northstar-commerce
+    name: Northstar Commerce
+    description: >-
+      Direct-to-consumer retail client. Marketing, CRM and revenue analytics.
+      This is the domain the demo workspace is bounded to.
+
+  - id: bluepeak-health
+    name: BluePeak Health
+    description: >-
+      Healthcare client on the same DataHub instance. Everything here is out of
+      bounds for the Northstar workspace — that separation is the whole point.
+
+tags:
+  - id: PII
+    name: PII
+    description: Personally identifiable information.
+  - id: Confidential
+    name: Confidential
+    description: Commercially sensitive; not for sharing outside the owning team.
+
+glossary_terms:
+  - id: PersonalData
+    name: Personal Data
+    description: >-
+      Data relating to an identified or identifiable natural person. Handling is
+      constrained by the client's data processing agreement.
+
+users:
+  - id: dana
+    name: Dana Okafor
+    title: Analytics Engineer, Northstar
+  - id: priya
+    name: Priya Raman
+    title: Data Protection Lead, BluePeak
+
+datasets:
+  # --- Northstar Commerce ----------------------------------------------------
+
+  - name: northstar.marketing_leads
+    env: DEV
+    domain: northstar-commerce
+    description: Inbound marketing leads, development copy.
+    owners: [dana]
+    schema:
+      - {name: lead_id, type: string}
+      - {name: email, type: string}
+      - {name: source_campaign, type: string}
+      - {name: created_at, type: time}
+
+  - name: northstar.marketing_leads
+    env: PROD
+    domain: northstar-commerce
+    description: Inbound marketing leads.
+    owners: [dana]
+    tags: [Confidential]
+    schema:
+      - {name: lead_id, type: string}
+      - {name: email, type: string, tags: [PII], terms: [PersonalData]}
+      - {name: source_campaign, type: string}
+      - {name: created_at, type: time}
+
+  - name: northstar.campaign_performance
+    env: DEV
+    domain: northstar-commerce
+    description: Campaign spend and conversion by channel and week.
+    owners: [dana]
+    schema:
+      - {name: campaign_id, type: string}
+      - {name: channel, type: string}
+      - {name: spend, type: number}
+      - {name: conversions, type: number}
+
+  # Sensitive and deliberately unowned — this is what ZR-007 fires on.
+  - name: northstar.campaign_costs
+    env: DEV
+    domain: northstar-commerce
+    description: >-
+      Negotiated agency rates. Commercially sensitive, and currently has no
+      owner recorded — which is exactly why Zence asks before it is used.
+    tags: [Confidential]
+    schema:
+      - {name: agency, type: string}
+      - {name: negotiated_rate, type: number}
+
+  - name: northstar.crm_opportunities
+    env: DEV
+    domain: northstar-commerce
+    description: Sales pipeline opportunities synced from CRM.
+    owners: [dana]
+    schema:
+      - {name: opportunity_id, type: string}
+      - {name: account_name, type: string}
+      - {name: stage, type: string}
+      - {name: amount, type: number}
+
+  # Deprecated, with a replacement named in the description.
+  - name: northstar.dim_customer_legacy
+    env: DEV
+    domain: northstar-commerce
+    description: >-
+      Superseded by northstar.dim_customer. Retained only until the last
+      dashboard migrates off it.
+    owners: [dana]
+    deprecated: true
+    deprecation_note: >-
+      Replaced by northstar.dim_customer. Do not build anything new on this.
+    schema:
+      - {name: customer_id, type: string}
+      - {name: full_name, type: string}
+
+  - name: northstar.dim_customer
+    env: DEV
+    domain: northstar-commerce
+    description: >-
+      Conformed customer dimension. The approved replacement for
+      northstar.dim_customer_legacy.
+    owners: [dana]
+    schema:
+      - {name: customer_id, type: string}
+      - {name: first_seen_at, type: time}
+      - {name: lifetime_orders, type: number}
+
+  # The shared transform. Feeds the critical dashboard, which is what makes
+  # ZR-008 a real lineage decision rather than a configured constant.
+  - name: northstar.fct_revenue_daily
+    env: DEV
+    domain: northstar-commerce
+    description: >-
+      Daily revenue fact table. Feeds the executive revenue dashboard, so
+      changes to its grain or semantics are visible outside the data team.
+    owners: [dana]
+    schema:
+      - {name: revenue_date, type: date}
+      - {name: gross_revenue, type: number}
+      - {name: net_revenue, type: number}
+      - {name: order_count, type: number}
+
+  # --- BluePeak Health -------------------------------------------------------
+
+  # Scenario A's target. PII at both dataset and column level.
+  - name: bluepeak.patient_contacts
+    env: PROD
+    domain: bluepeak-health
+    description: >-
+      Patient contact details. Restricted under the client's data processing
+      agreement. Not accessible from any other client's workspace.
+    owners: [priya]
+    tags: [PII]
+    terms: [PersonalData]
+    schema:
+      - {name: patient_id, type: string}
+      - {name: email, type: string, tags: [PII], terms: [PersonalData]}
+      - {name: phone, type: string, tags: [PII], terms: [PersonalData]}
+      - {name: postcode, type: string, tags: [PII]}
+      - {name: registered_at, type: time}
+
+  - name: bluepeak.member_export
+    env: PROD
+    domain: bluepeak-health
+    description: Monthly member export for the client's own reporting.
+    owners: [priya]
+    tags: [PII, Confidential]
+    terms: [PersonalData]
+    schema:
+      - {name: member_id, type: string}
+      - {name: email, type: string, tags: [PII], terms: [PersonalData]}
+      - {name: plan_tier, type: string}
+
+  # Out of domain but genuinely harmless — the case time-boxed exceptions exist
+  # for, and the difference between a boundary and a wall.
+  - name: bluepeak.shared_dim_date
+    env: PROD
+    domain: bluepeak-health
+    description: >-
+      Shared date dimension. Lives in this domain for historical reasons and
+      contains no client data at all.
+    owners: [priya]
+    schema:
+      - {name: date_key, type: date}
+      - {name: fiscal_quarter, type: string}
+
+dashboards:
+  - id: northstar_revenue
+    name: Northstar Revenue (Executive)
+    platform: looker
+    domain: northstar-commerce
+    description: >-
+      Executive revenue dashboard. Reviewed weekly outside the data team, which
+      is what makes an unannounced change to its inputs expensive.
+    owners: [dana]
+
+# Upstream -> downstream. The path that makes ZR-008 fire is
+# stg_orders -> fct_revenue_daily -> northstar_revenue.
+lineage:
+  - upstream: northstar.crm_opportunities
+    downstream: northstar.fct_revenue_daily
+  - upstream: northstar.dim_customer
+    downstream: northstar.fct_revenue_daily
+  - upstream: northstar.fct_revenue_daily
+    downstream: dashboard:northstar_revenue
+  - upstream: northstar.dim_customer_legacy
+    downstream: northstar.dim_customer
+  - upstream: northstar.marketing_leads
+    downstream: northstar.campaign_performance
+
+structured_properties:
+  - id: zence.last_review
+    display_name: Zence last review
+    description: >-
+      The most recent Zence decision that touched this asset. Written back at
+      session finalization.
+    type: string
+    entity_types: [dataset]

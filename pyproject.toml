@@ -60,6 +60,14 @@ files = ["packages", "tests"]
 module = ["datahub.*", "sqlglot.*"]
 ignore_missing_imports = true
 
+# The DataHub SDK's generated aspect classes have untyped constructors. Calling
+# them is not a type error on our side, and stubbing several hundred generated
+# classes is not a good use of anyone's time. Scoped to the one module that
+# constructs them, so the relaxation cannot spread.
+[[tool.mypy.overrides]]
+module = ["zence_cli.demo"]
+disallow_untyped_calls = false
+
 [[tool.mypy.overrides]]
 module = ["tests.*"]
 disallow_untyped_defs = false

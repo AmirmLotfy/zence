@@ -55,6 +55,10 @@ app = typer.Typer(
 policy_app = typer.Typer(help="Inspect and validate policy files.", no_args_is_help=True)
 app.add_typer(policy_app, name="policy")
 
+from zence_cli.demo import demo_app  # noqa: E402
+
+app.add_typer(demo_app, name="demo")
+
 JsonOption = Annotated[
     bool, typer.Option("--json", help="Emit machine-readable JSON instead of a table.")
 ]
