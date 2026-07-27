@@ -214,3 +214,51 @@ def test_every_sensitive_intent_blocks_a_degraded_allow(intent: Intent) -> None:
 
     assert decision.verdict is Verdict.ASK
     assert decision.source is DecisionSource.SAFE_DEFAULT
+
+
+# =============================================================================
+# Regressions
+#
+# All three were found by the provider tests rather than by inspection, and all
+# three sit on the same fault line: something that could not be looked up being
+# treated as something that was.
+# =============================================================================
+
+
+def test_unresolved_evidence_does_not_fire_cross_client_rules() -> None:
+    """A failed lookup leaves `domain_urn` None, which reads as "not in
+    allowed_domains" — so ZR-002 fired and reported a confident cross-client
+    finding built on no evidence, while the honest "could not reach DataHub"
+    message was never shown and `degraded` stayed False.
+
+    Rules that read asset *properties* now require a resolved lookup.
+    """
+    evidence = make_evidence(
+        status=EvidenceStatus.LOOKUP_FAILED, failure_reason="connection refused"
+    )
+    decision = evaluate(
+        make_action(intents={Intent.READ}),
+        [evidence],
+        make_workspace(),
+        make_policy(),  # full built-in rule set, not the empty policy
+    )
+
+    assert decision.source is DecisionSource.SAFE_DEFAULT
+    assert decision.degraded is True
+    assert "could not reach DataHub" in decision.reason
+    assert decision.rule_id != "ZR-002"
+
+
+def test_rules_keyed_on_resolution_state_still_fire() -> None:
+    """ZR-011 exists precisely to reason about not having resolved something,
+    so it must stay exempt from the rule above."""
+    evidence = make_evidence(status=EvidenceStatus.NOT_FOUND)
+    decision = evaluate(
+        make_action(tool_name="Write", intents={Intent.WRITE}),
+        [evidence],
+        make_workspace(),
+        make_policy(),
+    )
+
+    assert decision.rule_id == "ZR-011"
+    assert decision.verdict is Verdict.ASK

@@ -30,6 +30,7 @@ from zence_core.schemas import (
     Decision,
     DecisionSource,
     Evidence,
+    EvidenceStatus,
     Policy,
     Risk,
     Rule,
@@ -104,6 +105,16 @@ def _confidence_permits(rule: Rule, context: EvalContext) -> bool:
     return actual <= floor
 
 
+#: The two fields that describe whether an asset resolved, rather than what it
+#: contains. A rule may read these against unresolved evidence; everything else
+#: under `asset.` requires a successful lookup.
+RESOLUTION_FIELDS: frozenset[str] = frozenset({"asset.status", "asset.resolved"})
+
+
+def _reads_asset_properties(rule: Rule) -> bool:
+    return any(path.startswith("asset.") and path not in RESOLUTION_FIELDS for path in rule.when)
+
+
 def rule_matches(rule: Rule, context: EvalContext, policy: Policy) -> bool:
     """Whether every condition on `rule` holds for `context`."""
     if not rule.enabled:
@@ -111,6 +122,21 @@ def rule_matches(rule: Rule, context: EvalContext, policy: Policy) -> bool:
     if rule.references_asset_fields and context.evidence is None:
         return False
     if not _confidence_permits(rule, context):
+        return False
+
+    # A rule that reads an asset's *properties* needs a successful lookup. When
+    # DataHub could not be reached, `domain_urn` is None — and a rule keyed on
+    # "not in allowed_domains" would fire, producing a confident cross-client
+    # finding built on no evidence, with the honest "could not reach DataHub"
+    # message never shown. Those cases belong to the fail-safe matrix.
+    #
+    # Rules keyed on resolution *state* (ZR-011) are exempt: reasoning about not
+    # having resolved something is exactly their job.
+    if (
+        context.evidence is not None
+        and context.evidence.status is not EvidenceStatus.RESOLVED
+        and _reads_asset_properties(rule)
+    ):
         return False
 
     return all(

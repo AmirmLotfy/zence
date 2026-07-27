@@ -19,7 +19,7 @@ from zence_core.policy.loader import PolicyError, builtin_rules, load_policy_fil
 SEARCH_GLOBS = (
     "examples/**/.zence/policy.yaml",
     "examples/policies/*.yaml",
-    "datahub/demo/**/policy.yaml",
+    "demo/**/policy.yaml",
     ".zence/policy.yaml",
 )
 
