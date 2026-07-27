@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "zence",
+  "displayName": "Zence",
+  "version": "0.1.0",
+  "description": "Keeps Claude Code inside the correct client, domain, and environment using DataHub's metadata graph.",
+  "author": {
+    "name": "Amir Lotfy",
+    "url": "https://github.com/AmirmLotfy"
+  },
+  "homepage": "https://zence.vercel.app",
+  "repository": "https://github.com/AmirmLotfy/zence",
+  "license": "Apache-2.0",
+  "keywords": [
+    "datahub",
+    "data-governance",
+    "policy",
+    "mcp",
+    "pii",
+    "multi-client"
+  ],
+  "userConfig": {
+    "datahub_url": {
+      "type": "string",
+      "title": "DataHub GMS URL",
+      "description": "Your DataHub metadata service endpoint, e.g. http://localhost:8080",
+      "default": "http://localhost:8080",
+      "required": true
+    },
+    "datahub_token": {
+      "type": "string",
+      "title": "DataHub personal access token",
+      "description": "Created in DataHub under Settings > Access Tokens. Stored in your system keychain, never written to a file.",
+      "sensitive": true,
+      "required": true
+    },
+    "mode": {
+      "type": "string",
+      "title": "Enforcement mode",
+      "description": "audit records without blocking; enforce allows, asks, and denies for real. Start with audit.",
+      "default": "enforce"
+    }
+  }
+}

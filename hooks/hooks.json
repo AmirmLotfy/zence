@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/zence-hook",
+            "args": ["SessionStart"],
+            "timeout": 60,
+            "statusMessage": "Zence: resolving client boundary"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/zence-hook",
+            "args": ["UserPromptSubmit"],
+            "timeout": 10,
+            "statusMessage": "Zence: reading intent"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "mcp__.*datahub.*__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/zence-hook",
+            "args": ["PreToolUse"],
+            "timeout": 30,
+            "statusMessage": "Zence: checking catalog access"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/zence-hook",
+            "args": ["PreToolUse"],
+            "timeout": 30,
+            "statusMessage": "Zence: checking command"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/zence-hook",
+            "args": ["PreToolUse"],
+            "timeout": 30,
+            "statusMessage": "Zence: checking referenced assets"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "mcp__.*datahub.*__.*|Bash|Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/zence-hook",
+            "args": ["PostToolUse"],
+            "timeout": 15,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "mcp__.*datahub.*__.*|Bash|Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/zence-hook",
+            "args": ["PostToolUseFailure"],
+            "timeout": 15,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/zence-hook",
+            "args": ["Stop"],
+            "timeout": 30,
+            "statusMessage": "Zence: recording session decisions"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/zence-hook",
+            "args": ["SessionEnd"],
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}

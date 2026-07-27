@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "zence",
+  "description": "Zence — task-scoped context and policy firewall for Claude Code, powered by DataHub.",
+  "owner": {
+    "name": "Amir Lotfy",
+    "url": "https://github.com/AmirmLotfy"
+  },
+  "plugins": [
+    {
+      "name": "zence",
+      "source": "./",
+      "description": "Keeps Claude Code inside the correct client, domain, and environment using DataHub's metadata graph.",
+      "version": "0.1.0",
+      "license": "Apache-2.0",
+      "category": "security",
+      "tags": ["datahub", "governance", "pii", "policy", "mcp"],
+      "homepage": "https://zence.vercel.app",
+      "repository": "https://github.com/AmirmLotfy/zence"
+    }
+  ]
+}

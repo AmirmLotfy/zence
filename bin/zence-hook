@@ -1,0 +1,87 @@
+#!/bin/sh
+# Zence hook shim.
+#
+# Claude Code invokes this for every hook event. Its contract is absolute:
+# print exactly one JSON object to stdout and exit 0, no matter what.
+#
+# The event name arrives as $1, which is what lets this script fail safe without
+# parsing the JSON payload on stdin. If the Python runtime cannot be prepared,
+# a PreToolUse call returns `ask` rather than staying silent — silence is read by
+# Claude Code as "no opinion", which would let the very operation Zence exists to
+# check proceed unexamined.
+#
+# Interpreter resolution, in order:
+#   1. $ZENCE_PYTHON              — an explicit override
+#   2. a `zence-hook` on PATH     — installed via `uv tool install`
+#   3. $CLAUDE_PLUGIN_DATA/venv   — the cached environment this script builds
+#   4. build that venv with uv    — first run only
+#
+# The venv lives in CLAUDE_PLUGIN_DATA rather than CLAUDE_PLUGIN_ROOT because the
+# root changes on every plugin update and is cleaned up behind you.
+
+set -u
+
+EVENT="${1:-}"
+
+emit_fail_safe() {
+    reason="$1"
+    case "$EVENT" in
+        PreToolUse)
+            printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"Zence could not start (%s), so it cannot confirm this operation stays inside the active client boundary. Approve only if you know this asset is in bounds.","additionalContext":"The Zence hook runtime failed to start. This is a Zence fault, not a policy violation. Run `zence doctor`, or see https://github.com/AmirmLotfy/zence#requirements"},"systemMessage":"Zence could not start: %s"}' "$reason" "$reason"
+            ;;
+        SessionStart)
+            printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"## Zence\\n\\nZence is installed but its runtime could not start (%s), so no data boundary is being enforced in this session."}}' "$reason"
+            ;;
+        *)
+            printf '{}'
+            ;;
+    esac
+    exit 0
+}
+
+# 1. Explicit override.
+if [ -n "${ZENCE_PYTHON:-}" ] && [ -x "${ZENCE_PYTHON}" ]; then
+    exec "${ZENCE_PYTHON}" -m zence_core.hooks.main "$@"
+fi
+
+# 2. Already installed on PATH (uv tool install / pipx / an active venv).
+if command -v zence-hook >/dev/null 2>&1; then
+    # Guard against re-entering this same script if it is what PATH resolves to.
+    RESOLVED="$(command -v zence-hook)"
+    if [ "$RESOLVED" != "$0" ]; then
+        exec "$RESOLVED" "$@"
+    fi
+fi
+
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)}"
+DATA_DIR="${CLAUDE_PLUGIN_DATA:-${PLUGIN_ROOT}/.zence-runtime}"
+VENV="${DATA_DIR}/venv"
+PYTHON="${VENV}/bin/python"
+
+# 3. The cached environment.
+if [ -x "${PYTHON}" ]; then
+    exec "${PYTHON}" -m zence_core.hooks.main "$@"
+fi
+
+# 4. Build it. First run only; subsequent invocations take branch 3.
+if ! command -v uv >/dev/null 2>&1; then
+    emit_fail_safe "uv is not installed - see https://docs.astral.sh/uv/"
+fi
+
+if [ ! -d "${PLUGIN_ROOT}/packages/zence-core" ]; then
+    emit_fail_safe "plugin runtime not found at ${PLUGIN_ROOT}/packages"
+fi
+
+mkdir -p "${DATA_DIR}" 2>/dev/null || emit_fail_safe "cannot create ${DATA_DIR}"
+
+# Everything below writes to stderr. stdout belongs to the JSON response, and a
+# stray line of pip output there would corrupt the hook's answer.
+{
+    uv venv --python 3.11 "${VENV}" \
+        && uv pip install --python "${PYTHON}" --quiet \
+            "${PLUGIN_ROOT}/packages/zence-core"
+} >&2 2>&1 || emit_fail_safe "runtime install failed - run zence doctor"
+
+[ -x "${PYTHON}" ] || emit_fail_safe "runtime install produced no interpreter"
+
+exec "${PYTHON}" -m zence_core.hooks.main "$@"

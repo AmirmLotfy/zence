@@ -17,6 +17,9 @@ dependencies = [
 # every unit/contract test run without this installed.
 datahub = ["acryl-datahub>=1.6.0"]
 
+[project.scripts]
+zence-hook = "zence_core.hooks.main:main"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

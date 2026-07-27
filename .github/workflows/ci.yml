@@ -68,6 +68,29 @@ jobs:
       - name: Validate bundled and example policies
         run: uv run python -m zence_core.policy.validate_all
 
+  plugin:
+    name: Claude Code plugin validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      # Validates the marketplace manifest AND the plugin manifest. A plain
+      # `plugin validate` stops at the marketplace when both live in the same
+      # `.claude-plugin/` directory, which would leave plugin.json unchecked
+      # behind a green tick. See the script for the workaround.
+      - name: Validate manifests
+        run: ./scripts/validate-plugin.sh
+
+      - name: Hook shim is executable
+        run: test -x bin/zence-hook
+
+      - name: Hook shim is POSIX sh
+        run: sh -n bin/zence-hook
+
   secrets:
     name: Secret scanning
     runs-on: ubuntu-latest
@@ -119,6 +142,5 @@ jobs:
 # Jobs added as the components they validate come into existence. A CI job that
 # checks a file that does not exist yet is a job that lies about coverage.
 #
-#   plugin         (Phase 5)  npx -y @anthropic-ai/claude-code@2.1.220 plugin validate ./plugins/zence --strict
 #   web            (Phase 10) pnpm -C apps/web lint && typecheck && build
 #   artifacts      (Phase 10) validate examples/artifacts/*.json against the replay schema
