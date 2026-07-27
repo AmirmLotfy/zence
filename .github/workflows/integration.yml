@@ -1,0 +1,58 @@
+name: Integration (live DataHub)
+
+# Deliberately NOT run on every pull request. These tests need a real DataHub
+# instance; spinning one up costs ~8 GB RAM and several minutes per run.
+# CI proper (ci.yml) covers the same code paths against recorded fixtures.
+on:
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: "Re-seed the synthetic catalog before running"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "0 3 * * *" # nightly, 03:00 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    name: Live DataHub integration
+    runs-on: ubuntu-latest
+    # Skip silently on forks, which have no access to the secrets.
+    if: github.repository == 'AmirmLotfy/zence'
+    env:
+      DATAHUB_GMS_URL: ${{ secrets.DATAHUB_GMS_URL }}
+      DATAHUB_GMS_TOKEN: ${{ secrets.DATAHUB_GMS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - run: uv sync --all-packages --extra datahub
+
+      - name: Fail fast if credentials are absent
+        run: |
+          if [ -z "$DATAHUB_GMS_URL" ] || [ -z "$DATAHUB_GMS_TOKEN" ]; then
+            echo "::error::DATAHUB_GMS_URL / DATAHUB_GMS_TOKEN are not configured."
+            echo "This workflow tests a LIVE catalog. It must not silently pass without one."
+            exit 1
+          fi
+
+      - name: Verify catalog reachable
+        run: uv run zence doctor --json
+
+      - name: Seed synthetic catalog
+        if: inputs.seed
+        run: uv run zence demo seed
+
+      - name: Verify synthetic catalog
+        run: uv run zence demo verify
+
+      - name: Integration tests
+        run: uv run pytest -m integration -v

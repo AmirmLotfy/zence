@@ -1,0 +1,14 @@
+{
+  "name": "zence",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "Zence — task-scoped context and policy firewall for Claude Code, powered by DataHub",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AmirmLotfy/zence.git"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@11.17.0"
+}

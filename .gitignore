@@ -1,0 +1,45 @@
+# --- Secrets (never commit) --------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+.zence/local.yaml
+
+# --- Python ------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- Node / Next -------------------------------------------------------------
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+.vercel/
+playwright-report/
+test-results/
+
+# --- Zence runtime state -----------------------------------------------------
+# Local audit DB lives in ~/.zence, but guard against a stray copy in-tree.
+zence.db
+zence.db-*
+*.sqlite3
+
+# --- OS / editor -------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+!.vscode/extensions.json

@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Deliberately no DataHub credentials here. Every job in this workflow must
+  # pass without a catalog — unit and contract tests run on recorded fixtures.
+  # Live-catalog tests live in integration.yml.
+  UV_FROZEN: "1"
+
+jobs:
+  python:
+    name: Python — lint, types, tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Sync workspace
+        run: uv sync --all-packages
+
+      - name: Format
+        run: uv run ruff format --check .
+
+      - name: Lint
+        run: uv run ruff check --output-format=github .
+
+      - name: Types
+        run: uv run mypy
+
+      - name: Tests
+        run: uv run pytest -m "not integration and not e2e" --cov=zence_core --cov=zence_cli --cov-report=term-missing
+
+  secrets:
+    name: Secret scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # full history — a rotated secret is still a leaked secret
+
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  license:
+    name: License headers and metadata
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: LICENSE is Apache-2.0
+        run: |
+          test -f LICENSE
+          grep -q "Apache License" LICENSE
+          grep -q "Version 2.0, January 2004" LICENSE
+
+      - name: Declared license matches
+        run: |
+          grep -q 'license = "Apache-2.0"' pyproject.toml
+          grep -q 'license = "Apache-2.0"' packages/zence-core/pyproject.toml
+          grep -q 'license = "Apache-2.0"' packages/zence-cli/pyproject.toml
+
+# Jobs added as the components they validate come into existence. A CI job that
+# checks a file that does not exist yet is a job that lies about coverage.
+#
+#   policy-schema  (Phase 2)  uv run python -m zence_core.policy.validate_all
+#   plugin         (Phase 5)  npx -y @anthropic-ai/claude-code@2.1.220 plugin validate ./plugins/zence --strict
+#   web            (Phase 10) pnpm -C apps/web lint && typecheck && build
+#   artifacts      (Phase 10) validate examples/artifacts/*.json against the replay schema

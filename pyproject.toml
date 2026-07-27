@@ -1,0 +1,76 @@
+[project]
+name = "zence-workspace"
+version = "0.1.0"
+description = "Zence — task-scoped context and policy firewall for Claude Code, powered by DataHub"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv.sources]
+zence-core = { workspace = true }
+zence-cli = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "mypy>=1.14",
+    "ruff>=0.9",
+    "types-PyYAML>=6.0",
+]
+
+# --- Lint / format -----------------------------------------------------------
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["packages/zence-core/src", "packages/zence-cli/src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # bugbear
+    "UP",   # pyupgrade
+    "S",    # bandit (security)
+    "SIM",  # simplify
+    "RUF",
+]
+ignore = [
+    "S101",  # assert is fine in tests
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "E501"]
+
+# --- Types -------------------------------------------------------------------
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+mypy_path = ["packages/zence-core/src", "packages/zence-cli/src"]
+files = ["packages", "tests"]
+
+[[tool.mypy.overrides]]
+module = ["datahub.*", "sqlglot.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+
+# --- Tests -------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+    "integration: requires a live DataHub instance (deselect with '-m \"not integration\"')",
+    "e2e: requires a live DataHub instance and a real Claude Code session",
+]

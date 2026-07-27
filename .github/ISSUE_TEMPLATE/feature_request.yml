@@ -1,0 +1,53 @@
+name: Feature request
+description: Propose a capability Zence does not have
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check [the out-of-scope list](https://github.com/AmirmLotfy/zence#deliberately-out-of-scope)
+        first — some things are excluded on purpose, and the reasoning is stated there. If you
+        think an exclusion is wrong, say so; that is a valid request.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What goes wrong today? Describe the situation, not the solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like Zence to do
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Policy rules / decisions
+        - Asset reference extraction
+        - DataHub integration (read)
+        - DataHub write-back
+        - Claude Code plugin / hooks
+        - CLI
+        - Audit and reporting
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: determinism
+    attributes:
+      label: Determinism
+      description: |
+        Zence's enforcement path is deterministic on purpose — a model may classify intent, but it
+        never makes the final allow/ask/deny call.
+      options:
+        - label: This proposal can be implemented without an LLM deciding the outcome
+        - label: This proposal needs an LLM in the decision path (please explain why in the proposal)
