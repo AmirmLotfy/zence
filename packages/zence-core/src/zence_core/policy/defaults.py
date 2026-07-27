@@ -157,7 +157,25 @@ def safe_default(
             **common,  # type: ignore[arg-type]
         )
 
-    # 5. Everything resolved, in-domain, no rule objected.
+    # 5a. A sensitive action that named no catalog asset at all — `rm -rf build/`,
+    # a local script, a migration file. Saying "all 0 assets resolve inside the
+    # client" would be a true sentence that means nothing.
+    if not resolved:
+        return Decision(
+            verdict=Verdict.ALLOW,
+            source=DecisionSource.SAFE_DEFAULT,
+            risk=Risk.LOW,
+            rule_id=DEFAULT_RULE_ID,
+            rule_title="No catalog assets involved",
+            reason=(
+                "This operation references no assets known to DataHub, so there is "
+                "no client boundary for it to cross. Zence does not govern local "
+                "files or infrastructure."
+            ),
+            **common,  # type: ignore[arg-type]
+        )
+
+    # 5b. Everything resolved, in-domain, no rule objected.
     return Decision(
         verdict=Verdict.ALLOW,
         source=DecisionSource.SAFE_DEFAULT,

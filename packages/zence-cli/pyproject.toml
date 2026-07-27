@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-zence = "zence_cli.main:app"
+zence = "zence_cli.main:main"
 
 [build-system]
 requires = ["hatchling"]
