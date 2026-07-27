@@ -53,6 +53,24 @@ def test_every_package_is_apache_licensed() -> None:
         assert project["license"] == "Apache-2.0", relative
 
 
+def test_license_is_canonical_apache_text() -> None:
+    """GitHub only detects Apache-2.0 from the unmodified text.
+
+    Editing the appendix placeholders to insert a copyright line is the common
+    mistake — it silently breaks detection, and the hackathon requires the
+    license to be visible in the repository's About section. Attribution goes in
+    NOTICE instead, which is what Apache-2.0 actually prescribes.
+    """
+    license_text = (REPO_ROOT / "LICENSE").read_text()
+
+    assert "Apache License" in license_text
+    assert "Version 2.0, January 2004" in license_text
+    assert "Copyright [yyyy] [name of copyright owner]" in license_text
+
+    notice = (REPO_ROOT / "NOTICE").read_text()
+    assert "Copyright 2026 Amir Lotfy" in notice
+
+
 def test_python_floor_is_311() -> None:
     """mcp-server-datahub requires >=3.11; dropping below it silently breaks the demo."""
     for relative in (

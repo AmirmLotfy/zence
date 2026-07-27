@@ -91,15 +91,16 @@ claude mcp add datahub \
 
 ```python
 from datahub.sdk import DataHubClient, Document
-client = DataHubClient.from_env()          # reads DATAHUB_GMS_URL / DATAHUB_GMS_TOKEN
+
+client = DataHubClient.from_env()  # reads DATAHUB_GMS_URL / DATAHUB_GMS_TOKEN
 doc = Document.create_document(
-    id="zence-session-<sha256[:16]>",       # deterministic id ⇒ upsert = idempotent
+    id="zence-session-<sha256[:16]>",  # deterministic id ⇒ upsert = idempotent
     title="Zence decision record — <session>",
     text="<markdown>",
     subtype="Decision Record",
     related_assets=["urn:li:dataset:(urn:li:dataPlatform:snowflake,…,PROD)"],
 )
-client.entities.upsert(doc)                 # same id updates; new id creates
+client.entities.upsert(doc)  # same id updates; new id creates
 ```
 
 Same `id` ⇒ update, not duplicate. **This is the idempotency mechanism** — no bespoke dedup table
