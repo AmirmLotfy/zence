@@ -23,7 +23,7 @@ const description =
   "using DataHub's metadata graph. Open source, Apache-2.0.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://zence.vercel.app"),
+  metadataBase: new URL("https://zence.site"),
   title: {
     default: "Zence — Keep every client in bounds",
     template: "%s — Zence",

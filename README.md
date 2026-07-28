@@ -9,7 +9,8 @@
 
 ---
 
-> **Status: in active development** for [Build with DataHub: The Agent Hackathon](https://datahub.devpost.com/).
+> **Live:** [zence.site](https://zence.site) · **Status: in active development** for
+> [Build with DataHub: The Agent Hackathon](https://datahub.devpost.com/).
 > This README documents intended behaviour. Anything not yet covered by a passing test is
 > marked **(not yet implemented)**. Nothing here is claimed as working before it is demonstrated.
 
