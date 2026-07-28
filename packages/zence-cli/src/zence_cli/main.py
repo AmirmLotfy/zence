@@ -507,6 +507,214 @@ critical_downstream: []
     note("Next: `zence doctor` to check the connection, then `zence status`.")
 
 
+# =============================================================================
+# audit
+# =============================================================================
+
+audit_app = typer.Typer(help="Read the local decision history.", no_args_is_help=True)
+app.add_typer(audit_app, name="audit")
+
+_MARK = {"allow": "[allow]✓[/allow]", "ask": "[ask]?[/ask]", "deny": "[deny]✗[/deny]"}
+
+
+@audit_app.command("list")
+def audit_list(
+    limit: Annotated[int, typer.Option("--limit", "-n", help="How many to show.")] = 20,
+    verdict: Annotated[
+        str | None, typer.Option("--verdict", help="Filter: allow, ask, or deny.")
+    ] = None,
+    here: Annotated[bool, typer.Option("--here", help="Only this workspace.")] = False,
+    as_json: JsonOption = False,
+    path: PathOption = None,
+) -> None:
+    """Recent decisions, newest first."""
+    from zence_core.audit import list_decisions, session_scope
+
+    root = str((path or Path.cwd()).resolve()) if here else None
+
+    with session_scope() as connection:
+        if connection is None:
+            error("could not open the audit database")
+            raise typer.Exit(ExitCode.ERROR)
+        rows = list_decisions(connection, limit=limit, workspace_root=root, verdict=verdict)
+
+    if as_json:
+        emit_json(rows)
+        return
+
+    if not rows:
+        note("no decisions recorded yet")
+        return
+
+    from rich.table import Table
+
+    table = Table(show_header=True, box=None, padding=(0, 2, 0, 0))
+    for column in ("", "when", "rule", "tool", "client", "what"):
+        table.add_column(column, overflow="ellipsis", no_wrap=column != "what")
+
+    for row in rows:
+        table.add_row(
+            _MARK.get(row["verdict"], "?"),
+            str(row["created_at"])[:19].replace("T", " "),
+            row["rule_id"],
+            row["tool_name"],
+            row["active_client"],
+            row["rule_title"],
+        )
+    console.print(table)
+    console.print()
+    note(f"{len(rows)} decision(s) — `zence audit show <id>` for the full record")
+
+
+@audit_app.command("show")
+def audit_show(
+    decision_id: Annotated[str, typer.Argument(help="Decision id, or a unique prefix.")],
+    as_json: JsonOption = False,
+) -> None:
+    """Everything recorded about one decision."""
+    from zence_core.audit import get_decision, session_scope
+
+    with session_scope() as connection:
+        if connection is None:
+            error("could not open the audit database")
+            raise typer.Exit(ExitCode.ERROR)
+        record = get_decision(connection, decision_id)
+
+    if record is None:
+        error(f"no decision matching {decision_id!r}")
+        raise typer.Exit(ExitCode.ERROR)
+
+    if as_json:
+        emit_json(record)
+        return
+
+    verdict = Verdict(record["verdict"])
+    verdict_banner(verdict, record["rule_id"], record["rule_title"])
+    console.print()
+    console.print(record["reason"])
+    if record["remediation"]:
+        console.print()
+        console.print(f"[muted]→ {record['remediation']}[/muted]")
+
+    console.print()
+    field_table(
+        [
+            ("when", str(record["created_at"])[:19].replace("T", " ")),
+            ("client", record["active_client"]),
+            ("repository", record["root_path"]),
+            ("tool", f"{record['tool_name']} ({record['hook_event']})"),
+            ("policy", f"v{record['policy_version']} · {record['mode']} mode"),
+            ("risk", record["risk"]),
+            ("source", str(record["source"]).replace("_", " ")),
+            ("metadata from", record["provider"] or "(no lookup)"),
+        ]
+    )
+
+    if record["references"]:
+        heading("References extracted")
+        field_table(
+            [
+                (r["raw_text"], f"{r['confidence']} confidence · {r['extractor']}")
+                for r in record["references"]
+            ]
+        )
+
+    if record["evidence"]:
+        heading("DataHub evidence")
+        for item in record["evidence"]:
+            field_table(
+                [
+                    ("urn", f"[urn]{item['urn'] or '(unresolved)'}[/urn]"),
+                    ("status", item["status"]),
+                    ("domain", item["domain_name"] or item["domain_urn"] or "(none)"),
+                    ("tags", item["tags"]),
+                    ("lifecycle", item["lifecycle"]),
+                ]
+            )
+
+    if record["outcome"]:
+        heading("Outcome")
+        for item in record["outcome"]:
+            field_table(
+                [
+                    ("executed", "yes" if item["executed"] else "no"),
+                    ("succeeded", "yes" if item["success"] else "no"),
+                ]
+            )
+
+    if record["degraded"]:
+        console.print()
+        warn(f"decided with incomplete metadata: {record['degraded_reason']}")
+
+
+@audit_app.command("export")
+def audit_export(
+    output: Annotated[Path, typer.Option("--out", help="Where to write.")] = Path(
+        "examples/artifacts/audit-export.json"
+    ),
+    limit: Annotated[int, typer.Option("--limit", "-n")] = 200,
+    path: PathOption = None,
+) -> None:
+    """Export decision history as JSON, for a report or the website."""
+    from zence_core.audit import get_decision, list_decisions, session_scope
+
+    root = str((path or Path.cwd()).resolve()) if path else None
+
+    with session_scope() as connection:
+        if connection is None:
+            error("could not open the audit database")
+            raise typer.Exit(ExitCode.ERROR)
+        rows = list_decisions(connection, limit=limit, workspace_root=root)
+        full = [get_decision(connection, row["id"]) for row in rows]
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(
+        json.dumps({"decisions": [d for d in full if d]}, indent=2, default=str) + "\n",
+        encoding="utf-8",
+    )
+    console.print(f"[allow]✓[/allow] exported {len(full)} decision(s) to {output}")
+
+
+@audit_app.command("prune")
+def audit_prune(
+    days: Annotated[int, typer.Option("--older-than", help="Retention window.")] = 90,
+) -> None:
+    """Delete decisions older than the retention window."""
+    from zence_core.audit import prune, session_scope
+
+    with session_scope() as connection:
+        if connection is None:
+            error("could not open the audit database")
+            raise typer.Exit(ExitCode.ERROR)
+        removed = prune(connection, older_than_days=days)
+
+    console.print(f"[allow]✓[/allow] removed {removed} action(s) older than {days} days")
+
+
+@app.command()
+def finalize(
+    path: PathOption = None,
+    session: Annotated[str | None, typer.Option("--session", help="Claude session id.")] = None,
+) -> None:
+    """Write this session's decisions back to DataHub.
+
+    Safe to run repeatedly: the document id is deterministic, so a second run
+    updates the same record rather than creating another.
+    """
+    from zence_core.hooks.handlers import finalize_session
+
+    context = _load(path)
+    if session is None:
+        error("pass --session <id>; Claude Code supplies it to the hook automatically")
+        raise typer.Exit(ExitCode.ERROR)
+
+    status = finalize_session(session, context)
+    if status is None:
+        note("nothing new to record")
+        return
+    console.print(status)
+
+
 def main() -> None:  # pragma: no cover - console-script shim
     app()
 

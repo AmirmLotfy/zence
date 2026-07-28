@@ -7,8 +7,19 @@ into a fail-safe response instead of a broken session.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
+from zence_core.audit import (
+    record_decision,
+    record_outcome,
+    record_writeback,
+    session_decisions,
+    session_row,
+    session_scope,
+    upsert_session,
+    upsert_workspace,
+)
 from zence_core.extract import normalize
 from zence_core.hooks.context import (
     NotGovernedError,
@@ -26,6 +37,7 @@ from zence_core.hooks.protocol import (
 )
 from zence_core.policy import evaluate
 from zence_core.schemas import Decision, Verdict
+from zence_core.writeback import write_session_document
 
 #: Phrases in a prompt that describe intent, not assets. They add context for
 #: Claude; they never produce a decision on their own. Claiming an asset
@@ -198,6 +210,26 @@ def handle_pre_tool_use(payload: HookInput) -> dict[str, object]:
     evidences = context.provider.resolve(normalized.refs, context.workspace)
     decision = evaluate(normalized.action, evidences, context.workspace, context.policy)
 
+    # Recording happens after the decision is made and never affects it. A
+    # storage failure costs an audit row, not a session.
+    with session_scope() as connection:
+        if connection is not None:
+            workspace_pk = upsert_workspace(connection, context.workspace)
+            session_pk = upsert_session(
+                connection,
+                workspace_pk,
+                payload.session_id or "unknown",
+                context.workspace.mode.value,
+            )
+            record_decision(
+                connection,
+                session_pk=session_pk,
+                action=normalized.action,
+                refs=normalized.refs,
+                evidences=evidences,
+                decision=decision,
+            )
+
     if decision.verdict is Verdict.ALLOW and not decision.degraded:
         # Nothing to say. Returning an empty object keeps the transcript clean
         # and leaves the normal permission flow untouched.
@@ -213,28 +245,123 @@ def handle_pre_tool_use(payload: HookInput) -> dict[str, object]:
 
 
 def handle_post_tool_use(payload: HookInput) -> dict[str, object]:
-    """Record the outcome.
+    """Attach the execution result to the decision that permitted it.
 
-    Persistence lands in Phase 8; until then this is a well-formed no-op so the
-    hook wiring can be tested end to end without pretending an audit trail exists.
+    Without this the audit trail records what Zence allowed but not what
+    actually happened, and "allowed and then failed" is a materially different
+    story from "allowed and succeeded".
     """
+    if payload.tool_use_id:
+        with session_scope() as connection:
+            if connection is not None:
+                record_outcome(
+                    connection,
+                    tool_use_id=payload.tool_use_id,
+                    executed=True,
+                    success=True,
+                )
     return post_tool_use_output()
 
 
 def handle_post_tool_use_failure(payload: HookInput) -> dict[str, object]:
+    """Record a failure — distinctly from a policy denial.
+
+    A denied call never executes, so it has no outcome row. A call that Zence
+    permitted and that then failed on its own is a different fact, and conflating
+    the two would make the audit trail claim credit for someone else's error.
+    """
+    if payload.tool_use_id:
+        with session_scope() as connection:
+            if connection is not None:
+                record_outcome(
+                    connection,
+                    tool_use_id=payload.tool_use_id,
+                    executed=True,
+                    success=False,
+                    summary="tool reported a failure",
+                )
     return empty_output()
 
 
 # --- Stop / SessionEnd -------------------------------------------------------
 
 
-def handle_stop(payload: HookInput) -> dict[str, object]:
-    """Finalize the session.
+def finalize_session(session_id: str, context: ZenceContext) -> str | None:
+    """Upsert this session's decision document into DataHub.
 
-    Write-back lands in Phase 8. Returning a valid empty response now keeps the
-    contract stable so the plugin manifest does not change later.
+    Returns a short status line, or None when there was nothing to write. Called
+    from the Stop hook and from `/zence:finalize`; both are safe to run
+    repeatedly, because the document id is deterministic.
     """
-    return stop_output()
+    import os
+
+    with session_scope() as connection:
+        if connection is None:
+            return None
+
+        row = session_row(connection, session_id)
+        if row is None or not row["writeback_dirty"]:
+            # Nothing decided since the last write-back. Re-upserting an
+            # unchanged document would be noise in the catalog's audit trail.
+            return None
+
+        decisions = session_decisions(connection, session_id)
+        if not decisions:
+            return None
+
+        urns: list[str] = []
+        for decision in decisions:
+            urns.extend(json.loads(decision["evidence_urns"] or "[]"))
+
+        server = (
+            os.environ.get("CLAUDE_PLUGIN_OPTION_DATAHUB_URL")
+            or os.environ.get("DATAHUB_GMS_URL")
+            or context.settings.datahub_url
+            or "http://localhost:8080"
+        )
+        token = os.environ.get("CLAUDE_PLUGIN_OPTION_DATAHUB_TOKEN") or os.environ.get(
+            "DATAHUB_GMS_TOKEN"
+        )
+
+        result = write_session_document(
+            server=server,
+            token=token,
+            client_name=context.workspace.active_client,
+            workspace_id=context.workspace.workspace_id,
+            session_id=session_id,
+            repository=context.root.name,
+            policy_version=context.workspace.policy_version,
+            decisions=decisions,
+            related_urns=urns,
+        )
+
+        record_writeback(
+            connection,
+            session_pk=row["session_pk"],
+            idempotency_key=result.idempotency_key,
+            kind="session_document",
+            target_urn=None,
+            datahub_urn=result.document_urn,
+            status="confirmed" if result.ok else "failed",
+            detail=result.detail,
+        )
+
+        if not result.ok:
+            return f"Zence could not write the session record to DataHub: {result.detail}"
+        return (
+            f"Zence recorded {len(decisions)} decision(s) to DataHub as {result.idempotency_key}."
+        )
+
+
+def handle_stop(payload: HookInput) -> dict[str, object]:
+    """Finalize the session when there is something new to record."""
+    try:
+        context = load_context(payload.workspace_root)
+    except NotGovernedError:
+        return empty_output()
+
+    status = finalize_session(payload.session_id or "unknown", context)
+    return stop_output(additional_context=status) if status else stop_output()
 
 
 def handle_session_end(payload: HookInput) -> dict[str, object]:
