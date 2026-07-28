@@ -1,0 +1,50 @@
+{
+  "decision": {
+    "verdict": "ask",
+    "source": "rule",
+    "risk": "high",
+    "rule_id": "ZR-008",
+    "rule_title": "Critical downstream impact",
+    "policy_version": "1.0.0",
+    "mode": "enforce",
+    "reason": "Changing northstar.fct_revenue_daily affects 1 asset(s) the workspace has marked critical: urn:li:dashboard:(looker,northstar_revenue). DataHub lineage shows the dependency; the change itself may still be correct.",
+    "remediation": "Review the downstream consumers before approving, and tell their owners (urn:li:corpuser:dana) if the change alters semantics rather than implementation.",
+    "evidence_urns": [
+      "urn:li:dataset:(urn:li:dataPlatform:snowflake,northstar.fct_revenue_daily,DEV)"
+    ],
+    "matched_tags": [],
+    "matched_terms": [],
+    "matched_columns": [],
+    "downstream_critical": [
+      "urn:li:dashboard:(looker,northstar_revenue)"
+    ],
+    "provider": "fixture",
+    "degraded": false,
+    "degraded_reason": null,
+    "exception_applied": null,
+    "would_have_been": null,
+    "notes": []
+  },
+  "references": [
+    {
+      "raw_text": "northstar.fct_revenue_daily",
+      "kind": "dataset",
+      "confidence": "high",
+      "extractor": "sql",
+      "resolved_urn": null,
+      "columns": []
+    },
+    {
+      "raw_text": "northstar.stg_orders",
+      "kind": "dataset",
+      "confidence": "high",
+      "extractor": "sql",
+      "resolved_urn": null,
+      "columns": []
+    }
+  ],
+  "intents": [
+    "codegen",
+    "write"
+  ]
+}

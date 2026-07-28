@@ -1,0 +1,60 @@
+{
+  "decision": {
+    "verdict": "deny",
+    "source": "rule",
+    "risk": "critical",
+    "rule_id": "ZR-001",
+    "rule_title": "Cross-client PII access",
+    "policy_version": "1.0.0",
+    "mode": "enforce",
+    "reason": "bluepeak.patient_contacts belongs to BluePeak Health, but this session is bounded to Northstar Commerce. It carries urn:li:tag:PII, and columns email, phone are classified at field level. Reading it here would move another client's personal data into this workspace.",
+    "remediation": "Use an asset inside Northstar Commerce. If you genuinely need to work on BluePeak Health, switch to that client's workspace so the correct boundary applies.",
+    "evidence_urns": [
+      "urn:li:dataset:(urn:li:dataPlatform:snowflake,bluepeak.patient_contacts,PROD)"
+    ],
+    "matched_tags": [
+      "urn:li:tag:PII"
+    ],
+    "matched_terms": [
+      "urn:li:glossaryTerm:PersonalData"
+    ],
+    "matched_columns": [
+      "email",
+      "phone"
+    ],
+    "downstream_critical": [],
+    "provider": "fixture",
+    "degraded": false,
+    "degraded_reason": null,
+    "exception_applied": null,
+    "would_have_been": null,
+    "notes": []
+  },
+  "references": [
+    {
+      "raw_text": "northstar.marketing_leads",
+      "kind": "dataset",
+      "confidence": "high",
+      "extractor": "sql",
+      "resolved_urn": null,
+      "columns": [
+        "email"
+      ]
+    },
+    {
+      "raw_text": "bluepeak.patient_contacts",
+      "kind": "dataset",
+      "confidence": "high",
+      "extractor": "sql",
+      "resolved_urn": null,
+      "columns": [
+        "email",
+        "phone"
+      ]
+    }
+  ],
+  "intents": [
+    "codegen",
+    "read"
+  ]
+}

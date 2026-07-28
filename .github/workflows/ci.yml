@@ -91,6 +91,51 @@ jobs:
       - name: Hook shim is POSIX sh
         run: sh -n bin/zence-hook
 
+  web:
+    name: Website — lint, types, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm -C apps/web lint
+      - run: pnpm -C apps/web typecheck
+      - run: pnpm -C apps/web build
+
+      # The site claims to render real engine output. That only stays true if
+      # nobody edits an artifact by hand in the web tree — the build's sync step
+      # would overwrite it, so a diff here means someone tried.
+      - name: Artifacts match their source
+        run: |
+          ./scripts/sync-artifacts.sh
+          git diff --exit-code -- apps/web/app/_artifacts \
+            || { echo "::error::apps/web/app/_artifacts is out of sync with examples/artifacts/decisions"; exit 1; }
+
+      - name: Static export produced every route
+        run: |
+          for route in index demo docs architecture security open-source; do
+            path="apps/web/out/${route}.html"
+            [ "$route" = "index" ] && path="apps/web/out/index.html"
+            [ -f "$path" ] || [ -f "apps/web/out/${route}/index.html" ] \
+              || { echo "::error::missing route: $route"; exit 1; }
+          done
+          echo "all 6 routes exported"
+
+      - name: No external font or script requests
+        run: |
+          if grep -rq "fonts.googleapis\|fonts.gstatic" apps/web/out/; then
+            echo "::error::the site fetches fonts from a third party; they must be self-hosted"
+            exit 1
+          fi
+          echo "fonts are self-hosted"
+
   secrets:
     name: Secret scanning
     runs-on: ubuntu-latest
@@ -142,5 +187,3 @@ jobs:
 # Jobs added as the components they validate come into existence. A CI job that
 # checks a file that does not exist yet is a job that lies about coverage.
 #
-#   web            (Phase 10) pnpm -C apps/web lint && typecheck && build
-#   artifacts      (Phase 10) validate examples/artifacts/*.json against the replay schema

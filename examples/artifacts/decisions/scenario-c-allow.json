@@ -1,0 +1,40 @@
+{
+  "decision": {
+    "verdict": "allow",
+    "source": "rule",
+    "risk": "none",
+    "rule_id": "ZR-009",
+    "rule_title": "In-boundary development read",
+    "policy_version": "1.0.0",
+    "mode": "enforce",
+    "reason": "northstar.marketing_leads is inside Northstar Commerce in DEV, which this workspace permits.",
+    "remediation": null,
+    "evidence_urns": [
+      "urn:li:dataset:(urn:li:dataPlatform:snowflake,northstar.marketing_leads,DEV)"
+    ],
+    "matched_tags": [],
+    "matched_terms": [],
+    "matched_columns": [],
+    "downstream_critical": [],
+    "provider": "fixture",
+    "degraded": false,
+    "degraded_reason": null,
+    "exception_applied": null,
+    "would_have_been": null,
+    "notes": []
+  },
+  "references": [
+    {
+      "raw_text": "northstar.marketing_leads",
+      "kind": "dataset",
+      "confidence": "high",
+      "extractor": "sql",
+      "resolved_urn": null,
+      "columns": []
+    }
+  ],
+  "intents": [
+    "codegen",
+    "read"
+  ]
+}

@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+/*
+  Zence's visual system.
+
+  Light-first and editorial. The three decision colours are the only saturated
+  things on the page, so that green, amber and red mean something when they
+  appear — a site that is already loud everywhere cannot signal a denial.
+
+  Colour is never the sole carrier of meaning: every verdict also has a glyph
+  and a word, which is what makes the palette legible to a colour-blind reader
+  and in a greyscale screenshot.
+*/
+
+@theme {
+  --color-bg: #faf9f6;
+  --color-surface: #ffffff;
+  --color-fg: #111110;
+  --color-muted: #6b6862;
+  --color-rule: #e4e1da;
+
+  --color-allow: #2f6f4e;
+  --color-allow-soft: #edf4ef;
+  --color-ask: #b4761e;
+  --color-ask-soft: #fbf3e6;
+  --color-deny: #9b3b33;
+  --color-deny-soft: #fbeeed;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-face), ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: #14140f;
+    --color-surface: #1c1c16;
+    --color-fg: #f2f0e9;
+    --color-muted: #a8a49a;
+    --color-rule: #2e2e26;
+
+    --color-allow: #7bbf95;
+    --color-allow-soft: #17251d;
+    --color-ask: #e0a95c;
+    --color-ask-soft: #2a2016;
+    --color-deny: #e08b81;
+    --color-deny-soft: #2b1917;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-bg: #14140f;
+  --color-surface: #1c1c16;
+  --color-fg: #f2f0e9;
+  --color-muted: #a8a49a;
+  --color-rule: #2e2e26;
+
+  --color-allow: #7bbf95;
+  --color-allow-soft: #17251d;
+  --color-ask: #e0a95c;
+  --color-ask-soft: #2a2016;
+  --color-deny: #e08b81;
+  --color-deny-soft: #2b1917;
+}
+
+html {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  /* Wide measure everywhere else; prose is constrained per-block instead. */
+  line-height: 1.65;
+}
+
+/* Wide content — code blocks, tables, diagrams — scrolls inside its own box.
+   The page body never scrolls horizontally, at any width. */
+.scroll-x {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* A visible focus ring, in the brand colour rather than the browser default. */
+:focus-visible {
+  outline: 2px solid var(--color-allow);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+::selection {
+  background: var(--color-allow);
+  color: var(--color-bg);
+}

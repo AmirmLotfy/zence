@@ -1,0 +1,30 @@
+{
+  "decision": {
+    "verdict": "deny",
+    "source": "tamper",
+    "risk": "critical",
+    "rule_id": "ZR-014",
+    "rule_title": "Attempt to modify Zence configuration",
+    "policy_version": "1.0.0",
+    "mode": "enforce",
+    "reason": "This action modifies Zence's own policy or hook configuration (.zence/policy.yaml). Changing the boundary from inside the session it governs is not permitted.",
+    "remediation": "Edit `.zence/policy.yaml` outside a governed session and review the diff before committing it.",
+    "evidence_urns": [],
+    "matched_tags": [],
+    "matched_terms": [],
+    "matched_columns": [],
+    "downstream_critical": [],
+    "provider": null,
+    "degraded": false,
+    "degraded_reason": null,
+    "exception_applied": null,
+    "would_have_been": null,
+    "notes": [
+      "tamper protection is not waivable by exception or audit mode"
+    ]
+  },
+  "references": [],
+  "intents": [
+    "write"
+  ]
+}

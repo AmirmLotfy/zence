@@ -1,2 +1,12 @@
 packages:
   - "apps/*"
+
+# pnpm 11 requires an explicit decision on every dependency with a build script,
+# and errors rather than prompting in a non-interactive shell. Declared here so
+# a clean clone and CI both install unattended.
+#
+# Both are standard toolchain packages with native components: sharp is Next's
+# image pipeline, unrs-resolver is eslint's module resolver.
+allowBuilds:
+  sharp: true
+  unrs-resolver: true

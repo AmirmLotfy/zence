@@ -1,0 +1,40 @@
+{
+  "decision": {
+    "verdict": "ask",
+    "source": "rule",
+    "risk": "medium",
+    "rule_id": "ZR-006",
+    "rule_title": "Deprecated asset",
+    "policy_version": "1.0.0",
+    "mode": "enforce",
+    "reason": "northstar.dim_customer_legacy is marked deprecated in DataHub. Building on it means building on something its owners have signalled is going away.",
+    "remediation": "Check DataHub for the replacement asset and use that instead.",
+    "evidence_urns": [
+      "urn:li:dataset:(urn:li:dataPlatform:snowflake,northstar.dim_customer_legacy,DEV)"
+    ],
+    "matched_tags": [],
+    "matched_terms": [],
+    "matched_columns": [],
+    "downstream_critical": [],
+    "provider": "fixture",
+    "degraded": false,
+    "degraded_reason": null,
+    "exception_applied": null,
+    "would_have_been": null,
+    "notes": []
+  },
+  "references": [
+    {
+      "raw_text": "northstar.dim_customer_legacy",
+      "kind": "dataset",
+      "confidence": "high",
+      "extractor": "sql",
+      "resolved_urn": null,
+      "columns": []
+    }
+  ],
+  "intents": [
+    "codegen",
+    "read"
+  ]
+}
