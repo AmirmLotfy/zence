@@ -33,8 +33,12 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
 
+      # Includes the optional DataHub SDK. Without it mypy resolves those
+      # imports through `ignore_missing_imports` and type-checks a different
+      # program than a developer with the extra installed — which showed up as
+      # a suppression that was necessary locally and "unused" in CI.
       - name: Sync workspace
-        run: uv sync --all-packages
+        run: uv sync --all-packages --extra datahub
 
       - name: Format
         run: uv run ruff format --check .
