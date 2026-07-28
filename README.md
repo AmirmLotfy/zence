@@ -111,6 +111,36 @@ Stated up front so nothing is over-claimed:
 - Multi-user approval workflows and RBAC
 - Windows support
 
+## Documentation
+
+| | |
+|---|---|
+| [Architecture](docs/ARCHITECTURE.md) | How the pieces fit |
+| [Policy engine](docs/POLICY_ENGINE.md) | Rules, precedence, the fail-safe matrix |
+| [DataHub integration](docs/DATAHUB_INTEGRATION.md) | What is read, what is written |
+| [Claude Code plugin](docs/CLAUDE_CODE_PLUGIN.md) | Hooks, the shim, validation |
+| [Threat model](docs/THREAT_MODEL.md) | What this protects against, and what it does not |
+| [Demo environment](docs/DEMO_ENVIRONMENT.md) | The synthetic catalog and four scenarios |
+| [Test strategy](docs/TEST_STRATEGY.md) | What is tested and why |
+| [Troubleshooting](docs/TROUBLESHOOTING.md) | When something misbehaves |
+
+## Quick start
+
+```bash
+/plugin marketplace add AmirmLotfy/zence
+/plugin install zence@zence
+```
+
+Then, in each client repository:
+
+```bash
+zence init --client "Northstar Commerce" --domain "urn:li:domain:northstar-commerce"
+```
+
+That scaffolds `.zence/policy.yaml` in **audit mode** — every decision recorded,
+nothing blocked. Watch `zence audit list` for a few days, then switch to
+`enforce`. Blocking a team's work on day one is how a guardrail gets uninstalled.
+
 ## License
 
 [Apache License 2.0](LICENSE).

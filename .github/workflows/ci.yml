@@ -140,6 +140,42 @@ jobs:
           fi
           echo "fonts are self-hosted"
 
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # A broken link in a threat model is a small thing that makes every other
+      # claim in it look less careful.
+      - name: Internal links resolve
+        run: |
+          python3 - <<'EOF'
+          import pathlib, re, sys
+          missing = []
+          for md in pathlib.Path(".").rglob("*.md"):
+              if any(p in str(md) for p in ("node_modules", ".next", "/out/")):
+                  continue
+              for link in re.findall(r"\]\(([^)#:]+\.md)(?:#[^)]*)?\)", md.read_text()):
+                  if not (md.parent / link).resolve().exists():
+                      missing.append(f"{md} -> {link}")
+          if missing:
+              print("::error::broken internal links:")
+              for entry in missing:
+                  print(f"  {entry}")
+              sys.exit(1)
+          print("all internal documentation links resolve")
+          EOF
+
+      - name: Every documented file exists
+        run: |
+          for doc in ARCHITECTURE POLICY_ENGINE DATAHUB_INTEGRATION \
+                     CLAUDE_CODE_PLUGIN THREAT_MODEL DEMO_ENVIRONMENT \
+                     TEST_STRATEGY TROUBLESHOOTING; do
+            test -s "docs/${doc}.md" || { echo "::error::missing or empty docs/${doc}.md"; exit 1; }
+          done
+          echo "documentation set complete"
+
   secrets:
     name: Secret scanning
     runs-on: ubuntu-latest
