@@ -10,6 +10,8 @@
 | [DEMO_ENVIRONMENT.md](DEMO_ENVIRONMENT.md) | The synthetic catalog and the four scenarios |
 | [TEST_STRATEGY.md](TEST_STRATEGY.md) | What is tested, and which failures are worth pinning |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | When something does not behave |
+| [DEVPOST_SUBMISSION.md](DEVPOST_SUBMISSION.md) | Submission text, judge quickstart, disclosure |
+| [VIDEO_SCRIPT.md](VIDEO_SCRIPT.md) | Demo script, shot list, and recording rules |
 | [MASTER_PLAN.md](MASTER_PLAN.md) | The plan this was built from, kept for the record |
 
 Start with [ARCHITECTURE.md](ARCHITECTURE.md) if you want to understand the
