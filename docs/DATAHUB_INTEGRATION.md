@@ -94,8 +94,8 @@ Document.create_document(
     title="Zence session review — Northstar Commerce",
     text=markdown_body,
     subtype="Decision Record",
-    related_assets=[...],          # every asset the session touched
-    custom_properties={...},       # workspace, session, policy version, key
+    related_assets=[...],  # every asset the session touched
+    custom_properties={...},  # workspace, session, policy version, key
 )
 client.entities.upsert(document)
 ```
