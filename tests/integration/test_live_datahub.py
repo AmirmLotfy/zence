@@ -24,7 +24,14 @@ import pytest
 from zence_core.extract.base import make_ref
 from zence_core.policy import evaluate, load_policy_file, workspace_from_policy
 from zence_core.providers import LiveProvider
-from zence_core.schemas import EvidenceStatus, Intent, ProviderKind, Verdict
+from zence_core.schemas import (
+    EvidenceStatus,
+    Intent,
+    Policy,
+    ProviderKind,
+    Verdict,
+    WorkspaceContext,
+)
 
 pytestmark = pytest.mark.integration
 
@@ -55,7 +62,7 @@ def provider() -> LiveProvider:
 
 
 @pytest.fixture(scope="module")
-def workspace():  # type: ignore[no-untyped-def]
+def workspace() -> WorkspaceContext:
     from pathlib import Path
 
     root = Path(__file__).resolve().parents[2] / "examples/clients/northstar-analytics"
@@ -64,7 +71,7 @@ def workspace():  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture(scope="module")
-def policy():  # type: ignore[no-untyped-def]
+def policy() -> Policy:
     from pathlib import Path
 
     root = Path(__file__).resolve().parents[2] / "examples/clients/northstar-analytics"
@@ -251,11 +258,11 @@ def test_scenario_d_write_back_is_idempotent(workspace) -> None:  # type: ignore
         results = response.json()["data"]["search"]["searchResults"]
         return sum(1 for r in results if "zence-session-" in r["entity"]["urn"])
 
-    first = write_session_document(**common)  # type: ignore[arg-type]
+    first = write_session_document(**common)
     assert first.ok, first.detail
     after_first = document_count()
 
-    second = write_session_document(**common)  # type: ignore[arg-type]
+    second = write_session_document(**common)
     assert second.ok, second.detail
     after_second = document_count()
 
