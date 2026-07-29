@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 945 655" role="img" aria-label="Zence">
+  <title>Zence — for dark backgrounds</title>
+  <g fill="#FFFFFF">
+  <rect x="45" y="0" width="66" height="96" rx="3"/>
+  <rect x="834" y="0" width="66" height="96" rx="3"/>
+  <rect x="834" y="449" width="66" height="74" rx="3"/>
+  <rect x="0" y="93" width="945" height="82" rx="3"/>
+  <polygon points="599,175 773,175 435,429 260,429"/>
+  <polygon points="455,242 637,242 267,520 84,520"/>
+  <rect x="0" y="520" width="945" height="80" rx="3"/>
+  <rect x="45" y="597" width="66" height="58" rx="3"/>
+  <rect x="834" y="597" width="66" height="58" rx="3"/>
+  </g>
+  <polygon points="455,242 684,242 435,429 206,429" fill="#86C34A"/>
+</svg>

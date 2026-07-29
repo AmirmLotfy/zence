@@ -26,6 +26,12 @@
   --color-deny: #9b3b33;
   --color-deny-soft: #fbeeed;
 
+  /* The mark's own two colours, from the supplied artwork. They are the logo's,
+     not the palette's — the site's greens signal "allow", and a brand mark that
+     drifted into that meaning would be saying something it does not mean. */
+  --color-brand-ink: #29333d;
+  --color-brand-accent: #86a967;
+
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-mono-face), ui-monospace, "SF Mono", Menlo, monospace;
 }
@@ -44,6 +50,11 @@
     --color-ask-soft: #2a2016;
     --color-deny: #e08b81;
     --color-deny-soft: #2b1917;
+
+    /* White ink and the more saturated green — the second artwork file. A green
+       needs more chroma to hold its weight against a dark field. */
+    --color-brand-ink: #ffffff;
+    --color-brand-accent: #86c34a;
   }
 }
 
@@ -60,6 +71,9 @@
   --color-ask-soft: #2a2016;
   --color-deny: #e08b81;
   --color-deny-soft: #2b1917;
+
+  --color-brand-ink: #ffffff;
+  --color-brand-accent: #86c34a;
 }
 
 html {

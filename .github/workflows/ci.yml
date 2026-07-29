@@ -135,6 +135,15 @@ jobs:
       # /verify sends judges straight into the repository. A link that 404s
       # there is worse than no link, and renaming a file is exactly how it would
       # happen — silently, in a commit about something else.
+      # The mark's geometry lives in brand/build.py and the SVGs are its output.
+      # Editing one by hand looks like it works and is erased by the next run, so
+      # the regenerated vectors must match what is committed.
+      - name: Brand vectors match their generator
+        run: |
+          python3 brand/build.py --vectors-only
+          git diff --exit-code -- '*.svg' \
+            || { echo "::error::a brand SVG was hand-edited; change brand/build.py instead"; exit 1; }
+
       - name: Every repository link on the site points at a real path
         run: |
           python3 - <<'EOF'

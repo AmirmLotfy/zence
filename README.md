@@ -1,4 +1,8 @@
 <div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/zence-mark-on-dark.svg">
+    <img src="brand/zence-mark-on-light.svg" alt="Zence" width="132">
+  </picture>
   <h1>Zence</h1>
   <p><strong>Keep every client in bounds.</strong></p>
   <p>
@@ -123,6 +127,7 @@ Stated up front so nothing is over-claimed:
 | [Demo environment](docs/DEMO_ENVIRONMENT.md) | The synthetic catalog and four scenarios |
 | [Test strategy](docs/TEST_STRATEGY.md) | What is tested and why |
 | [Troubleshooting](docs/TROUBLESHOOTING.md) | When something misbehaves |
+| [Brand](brand/README.md) | The mark, which file to use where, and how it is generated |
 
 ## See a real decision in one minute
 

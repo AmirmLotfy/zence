@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
+
+import { Mark } from "@/components/mark";
+
 import "./globals.css";
 
 // Both are SIL OFL. `next/font` downloads and self-hosts them at build time, so
@@ -33,7 +36,17 @@ export const metadata: Metadata = {
     title: "Zence — Keep every client in bounds",
     description,
     type: "website",
+    siteName: "Zence",
+    images: [
+      {
+        url: "/social-card.png",
+        width: 1200,
+        height: 630,
+        alt: "The Zence mark: a Z drawn as a fence, with a green band laid across the break in its diagonal.",
+      },
+    ],
   },
+  twitter: { card: "summary_large_image" },
   robots: { index: true, follow: true },
 };
 
@@ -66,8 +79,15 @@ export default function RootLayout({
             aria-label="Primary"
             className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-5 py-4"
           >
-            <Link href="/" className="font-semibold tracking-tight">
-              Zence
+            <Link
+              href="/"
+              aria-label="Zence — home"
+              className="flex items-center gap-2 font-semibold tracking-tight"
+            >
+              {/* Fixed height, auto width: the mark is 1.44:1 and letterboxing
+                  it to match the wordmark's box would leave it visibly small. */}
+              <Mark className="h-[0.95rem] w-auto" />
+              <span>Zence</span>
             </Link>
             <ul className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted">
               {NAV.map((item) => (

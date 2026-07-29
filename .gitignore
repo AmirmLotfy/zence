@@ -44,3 +44,11 @@ Thumbs.db
 .vscode/
 !.vscode/extensions.json
 .vercel
+
+# Scratch output of `brand/verify.py`, regenerated on every run.
+brand/.verify-diff.png
+
+# The artwork drop folder. The same two files are committed at brand/source/,
+# which is what build.py measures and verify.py diffs against — a second copy
+# would be a second thing to keep in sync.
+zence-logo/
