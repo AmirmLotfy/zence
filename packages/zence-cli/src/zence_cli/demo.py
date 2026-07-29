@@ -19,6 +19,7 @@ recording carries the endpoint and timestamp it came from.
 from __future__ import annotations
 
 import json
+import warnings
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated, Any
@@ -28,6 +29,11 @@ import yaml
 
 from zence_cli.output import ExitCode, console, emit_json, error, heading, note, warn
 from zence_core.providers import FIXTURE_SCHEMA_VERSION, LiveProvider
+
+# The SDK emits an ExperimentalWarning per entity constructed, which buried
+# the seeding progress output. Silenced module-wide; the warning is about
+# API stability, which is recorded in docs/DATAHUB_INTEGRATION.md instead.
+warnings.filterwarnings("ignore", message=".*datahub SDK.*")
 
 demo_app = typer.Typer(
     help="Stand up, check, and capture the synthetic two-client demo catalog.",

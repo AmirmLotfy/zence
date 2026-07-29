@@ -18,7 +18,7 @@
     "downstream_critical": [
       "urn:li:dashboard:(looker,northstar_revenue)"
     ],
-    "provider": "fixture",
+    "provider": "live",
     "degraded": false,
     "degraded_reason": null,
     "exception_applied": null,
@@ -35,7 +35,7 @@
       "columns": []
     },
     {
-      "raw_text": "northstar.stg_orders",
+      "raw_text": "northstar.crm_opportunities",
       "kind": "dataset",
       "confidence": "high",
       "extractor": "sql",

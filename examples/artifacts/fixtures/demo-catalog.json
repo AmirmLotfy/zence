@@ -1,0 +1,222 @@
+{
+  "datahub_version": null,
+  "entities": {
+    "bluepeak.member_export": {
+      "column_tags": [
+        {
+          "field_path": "email",
+          "tags": [
+            "urn:li:tag:PII"
+          ],
+          "terms": [
+            "urn:li:glossaryTerm:PersonalData"
+          ]
+        }
+      ],
+      "domain_name": "BluePeak Health",
+      "domain_urn": "urn:li:domain:bluepeak-health",
+      "downstream_critical": [],
+      "environment": "PROD",
+      "lifecycle": "active",
+      "name": "urn:li:dataset:(urn:li:dataPlatform:snowflake,bluepeak.member_export,PROD)",
+      "owners": [
+        "urn:li:corpuser:priya"
+      ],
+      "tags": [
+        "urn:li:tag:Confidential",
+        "urn:li:tag:PII"
+      ],
+      "terms": [
+        "urn:li:glossaryTerm:PersonalData"
+      ],
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,bluepeak.member_export,PROD)"
+    },
+    "bluepeak.patient_contacts": {
+      "column_tags": [
+        {
+          "field_path": "email",
+          "tags": [
+            "urn:li:tag:PII"
+          ],
+          "terms": [
+            "urn:li:glossaryTerm:PersonalData"
+          ]
+        },
+        {
+          "field_path": "phone",
+          "tags": [
+            "urn:li:tag:PII"
+          ],
+          "terms": [
+            "urn:li:glossaryTerm:PersonalData"
+          ]
+        },
+        {
+          "field_path": "postcode",
+          "tags": [
+            "urn:li:tag:PII"
+          ],
+          "terms": []
+        }
+      ],
+      "domain_name": "BluePeak Health",
+      "domain_urn": "urn:li:domain:bluepeak-health",
+      "downstream_critical": [],
+      "environment": "PROD",
+      "lifecycle": "active",
+      "name": "urn:li:dataset:(urn:li:dataPlatform:snowflake,bluepeak.patient_contacts,PROD)",
+      "owners": [
+        "urn:li:corpuser:priya"
+      ],
+      "tags": [
+        "urn:li:tag:PII"
+      ],
+      "terms": [
+        "urn:li:glossaryTerm:PersonalData"
+      ],
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,bluepeak.patient_contacts,PROD)"
+    },
+    "bluepeak.shared_dim_date": {
+      "column_tags": [],
+      "domain_name": "BluePeak Health",
+      "domain_urn": "urn:li:domain:bluepeak-health",
+      "downstream_critical": [],
+      "environment": "PROD",
+      "lifecycle": "active",
+      "name": "urn:li:dataset:(urn:li:dataPlatform:snowflake,bluepeak.shared_dim_date,PROD)",
+      "owners": [
+        "urn:li:corpuser:priya"
+      ],
+      "tags": [],
+      "terms": [],
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,bluepeak.shared_dim_date,PROD)"
+    },
+    "northstar.campaign_costs": {
+      "column_tags": [],
+      "domain_name": "Northstar Commerce",
+      "domain_urn": "urn:li:domain:northstar-commerce",
+      "downstream_critical": [],
+      "environment": "DEV",
+      "lifecycle": "active",
+      "name": "urn:li:dataset:(urn:li:dataPlatform:snowflake,northstar.campaign_costs,DEV)",
+      "owners": [],
+      "tags": [
+        "urn:li:tag:Confidential"
+      ],
+      "terms": [],
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,northstar.campaign_costs,DEV)"
+    },
+    "northstar.campaign_performance": {
+      "column_tags": [],
+      "domain_name": "Northstar Commerce",
+      "domain_urn": "urn:li:domain:northstar-commerce",
+      "downstream_critical": [],
+      "environment": "DEV",
+      "lifecycle": "active",
+      "name": "urn:li:dataset:(urn:li:dataPlatform:snowflake,northstar.campaign_performance,DEV)",
+      "owners": [
+        "urn:li:corpuser:dana"
+      ],
+      "tags": [],
+      "terms": [],
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,northstar.campaign_performance,DEV)"
+    },
+    "northstar.crm_opportunities": {
+      "column_tags": [],
+      "domain_name": "Northstar Commerce",
+      "domain_urn": "urn:li:domain:northstar-commerce",
+      "downstream_critical": [
+        "urn:li:dashboard:(looker,northstar_revenue)"
+      ],
+      "environment": "DEV",
+      "lifecycle": "active",
+      "name": "urn:li:dataset:(urn:li:dataPlatform:snowflake,northstar.crm_opportunities,DEV)",
+      "owners": [
+        "urn:li:corpuser:dana"
+      ],
+      "tags": [],
+      "terms": [],
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,northstar.crm_opportunities,DEV)"
+    },
+    "northstar.dim_customer": {
+      "column_tags": [],
+      "domain_name": "Northstar Commerce",
+      "domain_urn": "urn:li:domain:northstar-commerce",
+      "downstream_critical": [
+        "urn:li:dashboard:(looker,northstar_revenue)"
+      ],
+      "environment": "DEV",
+      "lifecycle": "active",
+      "name": "urn:li:dataset:(urn:li:dataPlatform:snowflake,northstar.dim_customer,DEV)",
+      "owners": [
+        "urn:li:corpuser:dana"
+      ],
+      "tags": [],
+      "terms": [],
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,northstar.dim_customer,DEV)"
+    },
+    "northstar.dim_customer_legacy": {
+      "column_tags": [],
+      "domain_name": "Northstar Commerce",
+      "domain_urn": "urn:li:domain:northstar-commerce",
+      "downstream_critical": [],
+      "environment": "DEV",
+      "lifecycle": "deprecated",
+      "name": "urn:li:dataset:(urn:li:dataPlatform:snowflake,northstar.dim_customer_legacy,DEV)",
+      "owners": [
+        "urn:li:corpuser:dana"
+      ],
+      "tags": [],
+      "terms": [],
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,northstar.dim_customer_legacy,DEV)"
+    },
+    "northstar.fct_revenue_daily": {
+      "column_tags": [],
+      "domain_name": "Northstar Commerce",
+      "domain_urn": "urn:li:domain:northstar-commerce",
+      "downstream_critical": [
+        "urn:li:dashboard:(looker,northstar_revenue)"
+      ],
+      "environment": "DEV",
+      "lifecycle": "active",
+      "name": "urn:li:dataset:(urn:li:dataPlatform:snowflake,northstar.fct_revenue_daily,DEV)",
+      "owners": [
+        "urn:li:corpuser:dana"
+      ],
+      "tags": [],
+      "terms": [],
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,northstar.fct_revenue_daily,DEV)"
+    },
+    "northstar.marketing_leads": {
+      "column_tags": [
+        {
+          "field_path": "email",
+          "tags": [
+            "urn:li:tag:PII"
+          ],
+          "terms": [
+            "urn:li:glossaryTerm:PersonalData"
+          ]
+        }
+      ],
+      "domain_name": "Northstar Commerce",
+      "domain_urn": "urn:li:domain:northstar-commerce",
+      "downstream_critical": [],
+      "environment": "PROD",
+      "lifecycle": "active",
+      "name": "urn:li:dataset:(urn:li:dataPlatform:snowflake,northstar.marketing_leads,PROD)",
+      "owners": [
+        "urn:li:corpuser:dana"
+      ],
+      "tags": [
+        "urn:li:tag:Confidential"
+      ],
+      "terms": [],
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,northstar.marketing_leads,PROD)"
+    }
+  },
+  "note": "Captured from a live DataHub instance by `zence demo record`. Do not edit by hand \u2014 re-record instead.",
+  "recorded_at": "2026-07-29T01:36:33.694027+00:00",
+  "schema_version": 1,
+  "source_endpoint": "http://localhost:8080"
+}

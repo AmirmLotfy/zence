@@ -122,6 +122,7 @@ class LiveProvider(MetadataProvider):
         self._cache = cache if cache is not None else EvidenceCache()
         self._client: Any | None = None
         self._client_error: str | None = None
+        self._domain_names: dict[str, str | None] = {}
 
     # --- connection ----------------------------------------------------------
 
@@ -245,6 +246,75 @@ class LiveProvider(MetadataProvider):
             if str(result.urn) in workspace.critical_downstream
         )
 
+    @staticmethod
+    def _urns(values: Any) -> frozenset[str]:
+        """Pull URN strings out of whatever shape the SDK returned.
+
+        This exists because of a bug that only a live catalog could reveal.
+        `Dataset.tags` does not return URN strings — it returns
+        `TagAssociationClass` objects, and `str()` on one gives
+        ``TagAssociationClass({'tag': 'urn:li:tag:PII', ...})``. That never
+        equals ``urn:li:tag:PII``, so **ZR-001 could not fire against a real
+        DataHub**: the cross-client PII denial, the thing this project is for,
+        silently did nothing outside of tests.
+
+        Fixtures hid it, because a recording stores plain strings. The lesson is
+        in `docs/TEST_STRATEGY.md`; the fix is to read the association's field.
+
+        Each association type names its URN differently — `tag` for tags, `urn`
+        for glossary terms, `owner` for ownership — so all three are tried, and
+        a plain string still passes through for the fixture path.
+        """
+        if not values:
+            return frozenset()
+
+        found: set[str] = set()
+        for value in values:
+            if isinstance(value, str):
+                found.add(value)
+                continue
+            for attribute in ("tag", "urn", "owner"):
+                candidate = getattr(value, attribute, None)
+                if candidate:
+                    found.add(str(candidate))
+                    break
+            else:
+                # An unrecognised shape. Better a useless entry the rules will
+                # not match than a silently dropped classification.
+                found.add(str(value))
+        return frozenset(found)
+
+    def _domain_name(self, client: Any, domain_urn: str | None) -> str | None:
+        """The domain's display name, for the sentence a human reads.
+
+        The URN is what the boundary is decided on; this is only for the
+        message. But "belongs to (no domain)" in a denial reads as though Zence
+        did not know why it refused, which undermines the one output that has to
+        be convincing.
+
+        Cached per provider: a session touches few domains and this would
+        otherwise be a round trip per asset.
+        """
+        if not domain_urn:
+            return None
+        if domain_urn in self._domain_names:
+            return self._domain_names[domain_urn]
+
+        name: str | None = None
+        try:
+            from datahub.metadata.schema_classes import DomainPropertiesClass
+
+            aspect = client._graph.get_aspect(
+                entity_urn=domain_urn, aspect_type=DomainPropertiesClass
+            )
+            if aspect is not None:
+                name = str(aspect.name)
+        except Exception:
+            name = None
+
+        self._domain_names[domain_urn] = name
+        return name
+
     def _lifecycle(self, client: Any, urn: str) -> Lifecycle:
         """Deprecation is not surfaced on the SDK entity yet; read the aspect."""
         try:
@@ -285,8 +355,8 @@ class LiveProvider(MetadataProvider):
         columns: list[ColumnTags] = []
         for field in fields or []:
             try:
-                tags = frozenset(str(tag) for tag in (field.tags or []))
-                terms = frozenset(str(term) for term in (field.terms or []))
+                tags = self._urns(field.tags)
+                terms = self._urns(field.terms)
             except Exception:  # noqa: S112 - skipping the field IS the handling
                 # One unreadable field must not cost the whole schema. Logging
                 # here would write to a stream the hook harness parses as JSON.
@@ -325,10 +395,10 @@ class LiveProvider(MetadataProvider):
             urn=str(urn),
             name=str(safe("qualified_name") or safe("display_name") or ref.raw_text),
             domain_urn=str(domain) if domain else None,
-            domain_name=None,
-            owners=frozenset(str(owner) for owner in owners),
-            tags=frozenset(str(tag) for tag in (safe("tags") or [])),
-            terms=frozenset(str(term) for term in (safe("terms") or [])),
+            domain_name=self._domain_name(client, str(domain) if domain else None),
+            owners=self._urns(owners),
+            tags=self._urns(safe("tags")),
+            terms=self._urns(safe("terms")),
             column_tags=self._column_tags(entity),
             lifecycle=self._lifecycle(client, str(urn)),
             environment=self._environment(entity, str(urn)),

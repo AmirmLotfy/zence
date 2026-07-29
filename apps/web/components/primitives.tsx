@@ -154,9 +154,10 @@ export function SyntheticNotice({ children }: { children?: ReactNode }) {
           <strong className="font-medium text-fg">
             Synthetic scenario.
           </strong>{" "}
-          Northstar Commerce and BluePeak Health are fictional. These are real
-          Zence decisions, recorded from actual runs against the demo catalog —
-          not mock-ups — but no real company or person is represented.
+          Northstar Commerce and BluePeak Health are fictional. The decisions
+          are not: each panel is the output of `zence evaluate --json` run
+          against a live DataHub instance holding this catalog. No real company,
+          person, or dataset is represented.
         </>
       )}
     </p>

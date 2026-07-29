@@ -7,7 +7,7 @@
     "rule_title": "Cross-client PII access",
     "policy_version": "1.0.0",
     "mode": "enforce",
-    "reason": "bluepeak.patient_contacts belongs to BluePeak Health, but this session is bounded to Northstar Commerce. It carries urn:li:tag:PII, and columns email, phone are classified at field level. Reading it here would move another client's personal data into this workspace.",
+    "reason": "bluepeak.patient_contacts belongs to BluePeak Health, but this session is bounded to Northstar Commerce. It carries urn:li:tag:PII, and columns email, phone, postcode are classified at field level. Reading it here would move another client's personal data into this workspace.",
     "remediation": "Use an asset inside Northstar Commerce. If you genuinely need to work on BluePeak Health, switch to that client's workspace so the correct boundary applies.",
     "evidence_urns": [
       "urn:li:dataset:(urn:li:dataPlatform:snowflake,bluepeak.patient_contacts,PROD)"
@@ -20,10 +20,11 @@
     ],
     "matched_columns": [
       "email",
-      "phone"
+      "phone",
+      "postcode"
     ],
     "downstream_critical": [],
-    "provider": "fixture",
+    "provider": "live",
     "degraded": false,
     "degraded_reason": null,
     "exception_applied": null,

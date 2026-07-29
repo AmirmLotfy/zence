@@ -16,7 +16,7 @@
     "matched_terms": [],
     "matched_columns": [],
     "downstream_critical": [],
-    "provider": "fixture",
+    "provider": "live",
     "degraded": false,
     "degraded_reason": null,
     "exception_applied": null,
