@@ -339,22 +339,15 @@ def test_ungoverned_workspace_is_never_blocked(tmp_path: Path) -> None:
 # =============================================================================
 
 
-def test_unreachable_datahub_asks_rather_than_allowing(tmp_path: Path, monkeypatch: Any) -> None:
+def test_unreachable_datahub_asks_rather_than_allowing(tmp_path: Path) -> None:
     """No fixture configured and no catalog reachable: Zence must not wave it through.
 
-    The environment is cleared explicitly. `DATAHUB_GMS_URL` outranks
-    `.zence/project.yaml` by design, so a developer with a live catalog exported
-    in their shell would otherwise have this test silently resolve against it and
-    pass for the wrong reason — or fail, which is how this was noticed.
+    `DATAHUB_GMS_URL` outranks `.zence/project.yaml` by design, so a developer
+    with a live catalog exported in their shell would otherwise have this test
+    resolve against it and pass for the wrong reason — which is how the missing
+    isolation was noticed. `_hermetic_catalog_env` in `tests/conftest.py` now
+    clears it for every non-integration test.
     """
-    for name in (
-        "DATAHUB_GMS_URL",
-        "DATAHUB_GMS_TOKEN",
-        "CLAUDE_PLUGIN_OPTION_DATAHUB_URL",
-        "CLAUDE_PLUGIN_OPTION_DATAHUB_TOKEN",
-    ):
-        monkeypatch.delenv(name, raising=False)
-
     zence = tmp_path / ".zence"
     zence.mkdir()
     (zence / "policy.yaml").write_text(POLICY, encoding="utf-8")

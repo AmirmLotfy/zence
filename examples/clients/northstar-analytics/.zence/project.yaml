@@ -2,5 +2,16 @@
 #
 # No token here, ever. It comes from the environment — the Zence plugin stores
 # it in your system keychain and exports it to the hook.
+
 datahub:
   url: http://localhost:8080
+
+# A recording of the demo catalog, captured from a live DataHub instance by
+# `zence demo record`. It ships so that a fresh clone produces a real decision
+# with nothing installed — which is the difference between a reviewer seeing
+# Zence work and a reviewer reading about it.
+#
+# `DATAHUB_GMS_URL` in the environment takes precedence: set it and this
+# workspace talks to your catalog instead. Either way, every decision records
+# which one answered, so a recording can never pass as a live read.
+fixture: .zence/catalog.json

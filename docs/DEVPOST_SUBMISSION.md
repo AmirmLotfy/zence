@@ -24,6 +24,7 @@ Metadata-Aware Code Generation & Development
 |---|---|
 | Repository | https://github.com/AmirmLotfy/zence |
 | Live site | https://zence.site |
+| **Check it yourself** | https://zence.site/verify — commands, and a link into the code behind every claim |
 | Real decision artifacts | https://zence.site/demo |
 | Sample outputs (in repo) | `examples/artifacts/decisions/` |
 | Demo video | *(fill in after upload — YouTube, public, under 3:00)* |
@@ -239,7 +240,7 @@ uv sync --all-packages
 uv run pytest -m "not integration and not e2e"   # 386 tests, no catalog needed
 ```
 
-**The decisions themselves**, against the recorded catalog:
+**The decision itself**, against the recording the demo workspace ships:
 
 ```bash
 uv run zence evaluate --tool Write --file models/blend.sql \
@@ -247,13 +248,25 @@ uv run zence evaluate --tool Write --file models/blend.sql \
              FROM northstar.marketing_leads l
              JOIN bluepeak.patient_contacts p ON p.email = l.email" \
   -C examples/clients/northstar-analytics
-# exit 7 — ASK. Without a catalog Zence cannot see the domains, so it refuses
-# to guess and says so. With DataHub running this is exit 6, DENY, ZR-001.
+# exit 6 — DENY, ZR-001, naming email/phone/postcode as classified at column
+# level, with the DataHub URN as evidence.
 ```
 
-That difference is worth a moment: the same command gives a different — and
-correct — answer depending on whether the catalog is reachable. Zence never
-converts ignorance into permission.
+That recording was captured from the live instance by `zence demo record`, and
+every decision it produces reports `provider: fixture`. A recording is never
+allowed to present itself as a live read.
+
+Point it at a catalog and the catalog wins:
+
+```bash
+export DATAHUB_GMS_URL=http://localhost:8080   # outranks the recording
+```
+
+And in a workspace with **neither** — no recording, no reachable catalog — the
+same join comes back as **exit 7, ASK**, because Zence cannot see the domains
+and refuses to guess. That path is pinned by
+`tests/contract/test_hook_protocol.py::test_unreachable_datahub_asks_rather_than_allowing`.
+Ignorance never becomes permission.
 
 **With DataHub**, for the full loop including write-back:
 

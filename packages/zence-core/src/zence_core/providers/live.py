@@ -53,6 +53,24 @@ _URN_ENV = re.compile(r",\s*([A-Z][A-Z0-9_]*)\s*\)\s*$")
 #: Structured property that may carry an environment when the URN does not.
 ENVIRONMENT_PROPERTY_HINTS = ("environment", "env", "zence.environment")
 
+#: The dataset name inside a URN: the middle component of
+#: `urn:li:dataset:(urn:li:dataPlatform:snowflake,NAME,ENV)`.
+_URN_NAME = re.compile(r"urn:li:dataset:\([^,]+,([^,]+),[^,)]+\)")
+
+
+def name_from_urn(urn: str | None) -> str | None:
+    """The human-readable dataset name carried in a URN.
+
+    DataHub does not always populate `qualifiedName`, and without this a denial
+    read "urn:li:dataset:(urn:li:dataPlatform:snowflake,bluepeak.patient_contacts,PROD)
+    belongs to BluePeak Health" — technically correct and unreadable at the
+    moment somebody is deciding whether to trust the refusal.
+    """
+    if not urn:
+        return None
+    match = _URN_NAME.search(urn)
+    return match.group(1) if match else None
+
 
 #: Seconds before a single DataHub call is abandoned. The SDK's default retries
 #: with backoff, which takes ~30s to fail — far past a PreToolUse hook's budget,
@@ -393,7 +411,12 @@ class LiveProvider(MetadataProvider):
             fetched_at=datetime.now(UTC),
             ref=ref,
             urn=str(urn),
-            name=str(safe("qualified_name") or safe("display_name") or ref.raw_text),
+            name=str(
+                safe("qualified_name")
+                or safe("display_name")
+                or name_from_urn(str(urn))
+                or ref.raw_text
+            ),
             domain_urn=str(domain) if domain else None,
             domain_name=self._domain_name(client, str(domain) if domain else None),
             owners=self._urns(owners),

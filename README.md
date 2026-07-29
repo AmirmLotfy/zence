@@ -89,7 +89,7 @@ cannot borrow Claude's MCP client.
 | | |
 |---|---|
 | Python | 3.11+ (managed by [`uv`](https://docs.astral.sh/uv/)) |
-| DataHub | OSS/Core — `datahub docker quickstart` (needs ~8 GB RAM, 13 GB disk for Docker) |
+| DataHub | OSS/Core — `datahub docker quickstart` (needs ~8 GB RAM, 13 GB disk for Docker). **Optional** for the recorded path below |
 | Claude Code | 2.1.x |
 | OS | macOS or Linux |
 
@@ -123,6 +123,30 @@ Stated up front so nothing is over-claimed:
 | [Demo environment](docs/DEMO_ENVIRONMENT.md) | The synthetic catalog and four scenarios |
 | [Test strategy](docs/TEST_STRATEGY.md) | What is tested and why |
 | [Troubleshooting](docs/TROUBLESHOOTING.md) | When something misbehaves |
+
+## See a real decision in one minute
+
+No DataHub, no Docker, no account. The demo workspace ships a catalog recording
+captured from a live instance, so a fresh clone produces the real thing:
+
+```bash
+git clone https://github.com/AmirmLotfy/zence && cd zence
+uv sync --all-packages
+
+uv run zence evaluate --tool Write --file models/blend.sql \
+  --content "SELECT l.email, p.phone
+             FROM northstar.marketing_leads l
+             JOIN bluepeak.patient_contacts p ON p.email = l.email" \
+  -C examples/clients/northstar-analytics
+# ✗ DENY  ZR-001  Cross-client PII access        (exit 6)
+```
+
+Every decision produced that way is stamped `provider: fixture` — a recording
+can never present itself as a live read. Export `DATAHUB_GMS_URL` and it takes
+precedence over the recording, because someone who names a catalog means it.
+
+More paths to check this yourself, and direct links into the code behind each
+claim, are at **[zence.site/verify](https://zence.site/verify/)**.
 
 ## Quick start
 

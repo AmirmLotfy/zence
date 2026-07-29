@@ -124,13 +124,41 @@ jobs:
 
       - name: Static export produced every route
         run: |
-          for route in index demo docs architecture security open-source; do
+          for route in index demo verify docs architecture security open-source; do
             path="apps/web/out/${route}.html"
             [ "$route" = "index" ] && path="apps/web/out/index.html"
             [ -f "$path" ] || [ -f "apps/web/out/${route}/index.html" ] \
               || { echo "::error::missing route: $route"; exit 1; }
           done
-          echo "all 6 routes exported"
+          echo "all 7 routes exported"
+
+      # /verify sends judges straight into the repository. A link that 404s
+      # there is worse than no link, and renaming a file is exactly how it would
+      # happen — silently, in a commit about something else.
+      - name: Every repository link on the site points at a real path
+        run: |
+          python3 - <<'EOF'
+          import pathlib, re, sys
+          hrefs = set()
+          for f in pathlib.Path("apps/web/out").rglob("*.html"):
+              hrefs |= set(re.findall(r'href="(https://github\.com/AmirmLotfy/zence[^"]*)"', f.read_text()))
+          missing = []
+          checked = 0
+          for href in sorted(hrefs):
+              match = re.match(r"https://github\.com/AmirmLotfy/zence/(blob|tree)/main/(.+)$", href)
+              if not match:
+                  continue
+              kind, path = match.group(1), pathlib.Path(match.group(2))
+              checked += 1
+              if not (path.is_file() if kind == "blob" else path.is_dir()):
+                  missing.append(href)
+          if missing:
+              print("::error::the site links to paths that do not exist:")
+              for href in missing:
+                  print(f"  {href}")
+              sys.exit(1)
+          print(f"{checked} repository links resolve")
+          EOF
 
       - name: No external font or script requests
         run: |

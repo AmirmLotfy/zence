@@ -148,20 +148,32 @@ def resolve_mode(policy: Policy) -> Mode:
 def build_provider(root: Path, settings: ProjectSettings, mode: Mode) -> MetadataProvider:
     """Choose a provider.
 
-    A fixture is used only when the workspace explicitly points at one. It is
-    never a fallback for an unreachable DataHub: a decision made against a
-    recording, presented as live, is exactly the dishonesty this codebase
-    refuses. When the catalog is down, `LiveProvider` says so and the fail-safe
-    matrix decides.
+    Order, and the reasoning for it:
+
+    1. **A catalog named in the environment always wins.** If someone exported
+       `DATAHUB_GMS_URL`, they mean it, and quietly reading a recording instead
+       would be the exact dishonesty this codebase refuses.
+    2. **Otherwise a recording, if the workspace ships one.** This is what lets
+       the demo workspaces produce a real decision on a fresh clone with nothing
+       installed — the recording came from a live instance via
+       `zence demo record`, and every decision it produces is stamped
+       `provider: fixture` so nobody can mistake it for a live read.
+    3. **Otherwise live**, at whatever the workspace or the default names.
+
+    A fixture is still never a *fallback*: it is chosen up front and declared,
+    not substituted when a lookup fails. When a live catalog goes down mid-run,
+    `LiveProvider` says so and the fail-safe matrix decides.
     """
+    if _first_env(URL_ENV_VARS):
+        return LiveProvider(server=_first_env(URL_ENV_VARS) or "", token=_first_env(TOKEN_ENV_VARS))
+
     if settings.fixture_path:
         candidate = root / settings.fixture_path
         if candidate.is_file():
             return FixtureProvider.from_file(candidate)
 
-    url = _first_env(URL_ENV_VARS) or settings.datahub_url or "http://localhost:8080"
-    token = _first_env(TOKEN_ENV_VARS)
-    return LiveProvider(server=url, token=token)
+    url = settings.datahub_url or "http://localhost:8080"
+    return LiveProvider(server=url, token=_first_env(TOKEN_ENV_VARS))
 
 
 def load_context(cwd: Path) -> ZenceContext:

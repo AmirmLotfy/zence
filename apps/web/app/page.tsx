@@ -28,6 +28,12 @@ export default function Home() {
           >
             See a real decision
           </Link>
+          <Link
+            href="/verify/"
+            className="rounded-md border border-rule px-5 py-2.5 text-sm font-medium hover:border-fg"
+          >
+            Check it yourself
+          </Link>
           <a
             href="https://github.com/AmirmLotfy/zence"
             className="rounded-md border border-rule px-5 py-2.5 text-sm font-medium hover:border-fg"
@@ -35,6 +41,11 @@ export default function Home() {
             View source
           </a>
         </div>
+
+        <p className="mt-6 max-w-xl text-sm text-muted">
+          Apache-2.0. Runs entirely on your machine — no account, no hosted
+          service, nothing to sign up for.
+        </p>
       </section>
 
       {/* The problem */}
@@ -205,6 +216,15 @@ JOIN   bluepeak.patient_contacts  p   -- Client B  (you are not)
 {`zence init --client "Northstar Commerce" \\
            --domain "urn:li:domain:northstar-commerce"`}
           </Code>
+
+          <p className="text-muted">
+            Want to see a real decision before installing anything?{" "}
+            <Link href="/verify/" className="underline underline-offset-4">
+              One command, about a minute
+            </Link>{" "}
+            — the demo workspace ships a recording from a live DataHub instance,
+            so a fresh clone produces the real output with no catalog running.
+          </p>
         </div>
       </Section>
 

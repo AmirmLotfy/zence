@@ -37,8 +37,11 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
+const REPO = "https://github.com/AmirmLotfy/zence";
+
 const NAV = [
   { href: "/demo/", label: "Demo" },
+  { href: "/verify/", label: "Verify" },
   { href: "/architecture/", label: "Architecture" },
   { href: "/security/", label: "Security" },
   { href: "/docs/", label: "Docs" },
@@ -75,10 +78,7 @@ export default function RootLayout({
                 </li>
               ))}
             </ul>
-            <a
-              href="https://github.com/AmirmLotfy/zence"
-              className="ml-auto text-sm text-muted hover:text-fg"
-            >
+            <a href={REPO} className="ml-auto text-sm text-muted hover:text-fg">
               GitHub ↗
             </a>
           </nav>
@@ -89,25 +89,58 @@ export default function RootLayout({
         </main>
 
         <footer className="border-t border-rule text-sm text-muted">
-          <div className="mx-auto flex max-w-5xl flex-col gap-3 px-5 py-8 sm:flex-row sm:items-center sm:justify-between">
-            <p>
-              Apache-2.0 ·{" "}
-              <a
-                href="https://github.com/AmirmLotfy/zence"
-                className="underline underline-offset-4 hover:text-fg"
-              >
-                github.com/AmirmLotfy/zence
-              </a>
-            </p>
-            <p>
-              Built for{" "}
-              <a
-                href="https://datahub.devpost.com/"
-                className="underline underline-offset-4 hover:text-fg"
-              >
-                Build with DataHub: The Agent Hackathon
-              </a>
-            </p>
+          <div className="mx-auto grid max-w-5xl gap-8 px-5 py-10 sm:grid-cols-3">
+            <div>
+              <h2 className="font-medium text-fg">Source</h2>
+              <ul className="mt-2 space-y-1">
+                {[
+                  ["Repository", `${REPO}`],
+                  ["Policy engine", `${REPO}/tree/main/packages/zence-core/src/zence_core/policy`],
+                  ["Decision artifacts", `${REPO}/tree/main/examples/artifacts/decisions`],
+                  ["Demo catalog", `${REPO}/blob/main/demo/catalog/catalog.yaml`],
+                ].map(([label, href]) => (
+                  <li key={label}>
+                    <a className="underline underline-offset-4 hover:text-fg" href={href}>
+                      {label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h2 className="font-medium text-fg">Reference</h2>
+              <ul className="mt-2 space-y-1">
+                {[
+                  ["Threat model", `${REPO}/blob/main/docs/THREAT_MODEL.md`],
+                  ["Policy engine reference", `${REPO}/blob/main/docs/POLICY_ENGINE.md`],
+                  ["DataHub integration", `${REPO}/blob/main/docs/DATAHUB_INTEGRATION.md`],
+                  ["Build status", `${REPO}/blob/main/TASKS.md`],
+                ].map(([label, href]) => (
+                  <li key={label}>
+                    <a className="underline underline-offset-4 hover:text-fg" href={href}>
+                      {label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h2 className="font-medium text-fg">Zence</h2>
+              <p className="mt-2">
+                Apache-2.0. Runs on your machine; there is no hosted service.
+              </p>
+              <p className="mt-2">
+                Built for{" "}
+                <a
+                  href="https://datahub.devpost.com/"
+                  className="underline underline-offset-4 hover:text-fg"
+                >
+                  Build with DataHub: The Agent Hackathon
+                </a>
+              </p>
+            </div>
           </div>
         </footer>
       </body>

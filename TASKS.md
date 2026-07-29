@@ -13,7 +13,7 @@ Against the 15-phase plan in [docs/MASTER_PLAN.md](docs/MASTER_PLAN.md).
 - [x] **7 · End-to-end scenarios** — all four run against a real catalog
 - [x] **8 · Audit + write-back** — SQLite trail, idempotent decision documents
 - [x] **9 · CLI** — status, doctor, inspect, evaluate, policy, audit, demo, finalize
-- [x] **10 · Website** — six static routes rendering real engine output
+- [x] **10 · Website** — seven static routes rendering real engine output
 - [x] **11 · Hardening** — 64 adversarial tests, dependency audit, Dependabot
 - [x] **12 · Docs** — eight documents, link-checked in CI
 - [x] **13 · Deploy** — live at [zence.site](https://zence.site)
@@ -35,11 +35,25 @@ green. 15 integration tests, marked so CI still needs no catalog.
 
 Every artifact rendered on the website reports `provider: live`.
 
+## Reproducible without a catalog
+
+The demo workspace ships the recording those runs produced, so the cross-client
+denial reproduces on a fresh clone with no DataHub, no Docker and no account —
+`uv run zence evaluate … -C examples/clients/northstar-analytics` exits 6.
+Decisions made that way report `provider: fixture`; a catalog named in the
+environment takes precedence over the recording. The commands, and a link into
+the code behind each claim, are at [zence.site/verify](https://zence.site/verify/).
+
+A workspace with neither a recording nor a reachable catalog still exits 7 —
+ASK — which is the behaviour that matters and is pinned by a contract test.
+
 ## Remaining — yours
 
 - [ ] Record and upload the demo video ([docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md), timed at 2:45)
 - [ ] Submit on Devpost ([docs/DEVPOST_SUBMISSION.md](docs/DEVPOST_SUBMISSION.md) is copy-ready)
 - [ ] Stop the VM when not demoing: `gcloud compute instances stop zence-datahub --zone=europe-west1-b`
+      (nothing a judge needs depends on it — the recording covers the read path,
+      and the website is static)
 
 ## Deliberately not built
 

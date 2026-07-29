@@ -30,6 +30,29 @@ from zence_core.schemas import (
     WorkspaceContext,
 )
 
+#: Anything that names a catalog. `build_provider` gives these precedence over
+#: `.zence/project.yaml` on purpose — someone who exported `DATAHUB_GMS_URL`
+#: means it. That is right in production and wrong in a test: a developer with a
+#: live catalog in their shell would run a different program than CI does, and
+#: the suite would pass or fail for reasons unrelated to the change. Integration
+#: tests are exempt; a live catalog is the entire point of those.
+CATALOG_ENV_VARS = (
+    "DATAHUB_GMS_URL",
+    "DATAHUB_GMS_TOKEN",
+    "CLAUDE_PLUGIN_OPTION_DATAHUB_URL",
+    "CLAUDE_PLUGIN_OPTION_DATAHUB_TOKEN",
+)
+
+
+@pytest.fixture(autouse=True)
+def _hermetic_catalog_env(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Run every non-integration test as though no catalog were configured."""
+    if request.node.get_closest_marker("integration") or request.node.get_closest_marker("e2e"):
+        return
+    for name in CATALOG_ENV_VARS:
+        monkeypatch.delenv(name, raising=False)
+
+
 NORTHSTAR_DOMAIN = "urn:li:domain:northstar-commerce"
 BLUEPEAK_DOMAIN = "urn:li:domain:bluepeak-health"
 
