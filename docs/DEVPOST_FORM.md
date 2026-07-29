@@ -331,13 +331,17 @@ claim. The site nav gets them anywhere else in one click.
 **Example artifacts**
 
 ```
-https://github.com/AmirmLotfy/zence/tree/main/examples/artifacts/decisions
+https://github.com/AmirmLotfy/zence/tree/main/examples
 ```
 
-Six decision records straight from `zence evaluate --json` — deny, ask, allow,
-an MCP interception, a deprecated-asset ask, and a tamper attempt. This is the
-output a judge should be assessing, and linking `examples/` root instead would
-make them go hunting for it.
+Link the folder, not the sub-folder. `examples/README.md` renders directly under
+the file list on GitHub, so a judge arrives at an index rather than at raw JSON:
+a table of the six decision records with the verdict, the rule and what each one
+demonstrates, the two write-back artifacts, and a note on the two fields worth
+looking at in any of them — `provider`, and `degraded`.
+
+That field says "so judges can evaluate quality **without running the code**."
+Six unlabelled JSON files do not meet that bar. An index does.
 
 ## Which DataHub technologies did you use?
 
@@ -409,9 +413,10 @@ not a given.
 The Documents API is the best-designed thing I touched. `Document.create_document(id=...)`
 plus `client.entities.upsert()` gives you idempotency structurally, from a
 deterministic id, rather than through a read-check-write that can lose a race. I
-key mine on sha256(workspace::session), so finalizing a session ten times leaves
-exactly one document with an advanced updated_at. I did not have to write a dedup
-table, and I did not have to think about concurrency. That is a real design win
+key mine on sha256(workspace::session), so finalizing a session repeatedly leaves
+exactly one document — I drove the write path three times against a live
+instance to check, and the count stayed at one. I did not have to write a dedup
+table and I did not have to think about concurrency. That is a real design win
 and it is under-advertised.
 
 Configuring the MCP server entirely through environment variables made it
