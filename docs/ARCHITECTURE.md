@@ -21,8 +21,17 @@ Claude Code session in ~/clients/northstar-analytics/
   └─ Stop / SessionEnd ─► finalize ──► DataHub document (idempotent upsert)
 ```
 
-Measured: warm hook calls land at **0.6–0.8s** against a 2.5s budget. The first
-call after install builds a virtualenv and takes ~7.7s, inside a 30s timeout.
+**Latency, measured on an Apple M1, and what each number covers.** A full warm
+`PreToolUse` — parse, extract, resolve, evaluate, decide, emit — takes **0.20–0.28s**
+against a recorded catalog, including interpreter startup. The first call after
+install builds the runtime virtualenv and takes **~14s**, inside a 30s timeout.
+
+Live-catalog latency is **not** quoted here, because the only instance available
+to measure was reached over an SSH tunnel to a remote VM, where the first request
+alone costs ~11s of connection setup and the SDK's 4s read timeout is exceeded
+often enough that lookups intermittently degrade to `ask`. That number would say
+more about the tunnel than about Zence. Against a local `datahub docker
+quickstart` it should be far lower — untested, so unclaimed.
 
 ## Layout
 

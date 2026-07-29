@@ -76,10 +76,16 @@ mkdir -p "${DATA_DIR}" 2>/dev/null || emit_fail_safe "cannot create ${DATA_DIR}"
 
 # Everything below writes to stderr. stdout belongs to the JSON response, and a
 # stray line of pip output there would corrupt the hook's answer.
+#
+# The `[datahub]` extra is not optional here, whatever the package metadata says.
+# Without it `LiveProvider` has no SDK, every lookup fails, and the fail-safe
+# turns every decision into `ask` — so a plugin installed from the marketplace
+# would fail safe forever and never once read the catalog. The extra is optional
+# for the library and for tests; it is mandatory for the runtime that enforces.
 {
     uv venv --python 3.11 "${VENV}" \
         && uv pip install --python "${PYTHON}" --quiet \
-            "${PLUGIN_ROOT}/packages/zence-core"
+            "${PLUGIN_ROOT}/packages/zence-core[datahub]"
 } >&2 2>&1 || emit_fail_safe "runtime install failed - run zence doctor"
 
 [ -x "${PYTHON}" ] || emit_fail_safe "runtime install produced no interpreter"

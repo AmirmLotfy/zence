@@ -196,7 +196,8 @@ the offending columns named, the DataHub URN as evidence, and an in-domain
 alternative offered. Every claim on the website is a JSON artifact from
 `zence evaluate --json`, and CI fails the build if one is edited by hand.
 
-Warm hook calls land at 0.6–0.8s against a 2.5s budget.
+A full warm hook call — parse, extract, resolve, evaluate, decide — takes
+0.20–0.28s against a recorded catalog on an M1, interpreter startup included.
 
 ## What I learned
 

@@ -32,7 +32,7 @@ silence. That is deliberate — silence reads to Claude Code as "no opinion".
 ### The first tool call is slow
 
 Expected once. The shim builds a virtualenv on first use, around 7.7 seconds
-against a 30-second timeout. Subsequent calls are 0.6–0.8s. Run `zence doctor`
+against a 30-second timeout. Subsequent calls are 0.20–0.28s. Run `zence doctor`
 after installing to warm it before you need it.
 
 ### Everything is being asked about

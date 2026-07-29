@@ -82,7 +82,8 @@ a missing `uv` returns `ask` on a `PreToolUse` rather than staying silent.
 Silence reads to Claude Code as "no opinion", which would let the very operation
 Zence exists to check proceed unexamined.
 
-Cold start ~7.7s (30s timeout). Warm 0.6–0.8s.
+Cold start ~14s (30s timeout) — it builds the runtime venv. Warm 0.20–0.28s
+against a recording.
 
 ## Timeouts
 

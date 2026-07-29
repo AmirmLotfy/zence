@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import io
 import json
+import pathlib
 from pathlib import Path
 from typing import Any
 
@@ -490,3 +491,29 @@ def test_no_secret_reaches_the_session_context(workspace: Path, monkeypatch: Any
         {"hook_event_name": "SessionStart", "session_id": "s", "cwd": str(workspace)},
     )
     assert "super-secret-token-value" not in json.dumps(output)
+
+
+def test_shim_installs_the_datahub_extra() -> None:
+    """The plugin runtime must be able to reach a catalog.
+
+    `zence-core` declares `acryl-datahub` as an optional extra, which is right
+    for the library: unit and contract tests run without it. It is not optional
+    for the runtime the shim builds. Installed without it, `LiveProvider` has no
+    SDK, every lookup fails, and the fail-safe turns every decision into `ask` —
+    so a plugin installed from the marketplace would fail safe forever and never
+    once read DataHub. It looks like it is working, which is the worst way for
+    this particular thing to break.
+
+    Found by running the shim against a live catalog rather than by reading it.
+    """
+    shim = pathlib.Path(__file__).resolve().parents[2] / "bin" / "zence-hook"
+    install = [
+        line
+        for line in shim.read_text(encoding="utf-8").splitlines()
+        if "packages/zence-core" in line
+    ]
+    assert install, "the shim no longer installs zence-core"
+    assert any("[datahub]" in line for line in install), (
+        "bin/zence-hook installs zence-core without the [datahub] extra; the "
+        "hook runtime would have no SDK and degrade every decision to ask"
+    )
