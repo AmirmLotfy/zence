@@ -17,7 +17,10 @@ from __future__ import annotations
 
 import io
 import json
+import os
 import pathlib
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -517,3 +520,37 @@ def test_shim_installs_the_datahub_extra() -> None:
         "bin/zence-hook installs zence-core without the [datahub] extra; the "
         "hook runtime would have no SDK and degrade every decision to ask"
     )
+
+
+def test_hook_writes_nothing_to_stderr(tmp_path: Path) -> None:
+    """Claude Code surfaces a hook's stderr, so anything on it is user-visible.
+
+    `python -m zence_core.hooks.main` made runpy import the package — whose
+    `__init__` re-exports from `main` — and then execute `main` as `__main__`,
+    which it warns about. Harmless to the decision and invisible in every test
+    that captured stdout only, but it put a `RuntimeWarning` in front of every
+    user on every tool call. `zence_core/hooks/__main__.py` exists to avoid it.
+
+    Only visible by running the plugin inside a real Claude Code session and
+    reading the hook_response, which is how it was found.
+    """
+    zence = tmp_path / ".zence"
+    zence.mkdir()
+    (zence / "policy.yaml").write_text(POLICY, encoding="utf-8")
+
+    shim = pathlib.Path(__file__).resolve().parents[2] / "bin" / "zence-hook"
+    payload = pre_tool(tmp_path, "Write", {"file_path": "m.sql", "content": "SELECT 1"})
+
+    result = subprocess.run(
+        [str(shim), "PreToolUse"],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        env={**os.environ, "ZENCE_PYTHON": sys.executable},
+        timeout=60,
+    )
+
+    assert result.stderr == "", (
+        f"the hook wrote to stderr, which Claude Code shows:\n{result.stderr}"
+    )
+    json.loads(result.stdout)  # and stdout is still exactly one JSON object

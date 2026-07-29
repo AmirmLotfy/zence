@@ -41,7 +41,7 @@ emit_fail_safe() {
 
 # 1. Explicit override.
 if [ -n "${ZENCE_PYTHON:-}" ] && [ -x "${ZENCE_PYTHON}" ]; then
-    exec "${ZENCE_PYTHON}" -m zence_core.hooks.main "$@"
+    exec "${ZENCE_PYTHON}" -m zence_core.hooks "$@"
 fi
 
 # 2. Already installed on PATH (uv tool install / pipx / an active venv).
@@ -60,7 +60,7 @@ PYTHON="${VENV}/bin/python"
 
 # 3. The cached environment.
 if [ -x "${PYTHON}" ]; then
-    exec "${PYTHON}" -m zence_core.hooks.main "$@"
+    exec "${PYTHON}" -m zence_core.hooks "$@"
 fi
 
 # 4. Build it. First run only; subsequent invocations take branch 3.
@@ -90,4 +90,4 @@ mkdir -p "${DATA_DIR}" 2>/dev/null || emit_fail_safe "cannot create ${DATA_DIR}"
 
 [ -x "${PYTHON}" ] || emit_fail_safe "runtime install produced no interpreter"
 
-exec "${PYTHON}" -m zence_core.hooks.main "$@"
+exec "${PYTHON}" -m zence_core.hooks "$@"
