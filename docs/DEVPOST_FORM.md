@@ -304,3 +304,224 @@ there means being judged on output it doesn't produce.
 
 **One thing to fix in the form itself:** the story template Devpost pre-filled
 still says *"What's next for Comgu"*. Change it to Zence before submitting.
+
+---
+
+# The rest of the form
+
+## URLs
+
+**Public code repository**
+
+```
+https://github.com/AmirmLotfy/zence
+```
+
+**Project URL judges can test**
+
+```
+https://zence.site/verify
+```
+
+Not the homepage. That field asks for easy access to *test the functionality*,
+and `/verify` is the page built for exactly that — a one-minute path needing
+only `uv`, a ten-minute live-DataHub path, and a link into the code behind every
+claim. The site nav gets them anywhere else in one click.
+
+**Example artifacts**
+
+```
+https://github.com/AmirmLotfy/zence/tree/main/examples/artifacts/decisions
+```
+
+Six decision records straight from `zence evaluate --json` — deny, ask, allow,
+an MCP interception, a deprecated-asset ask, and a tamper attempt. This is the
+output a judge should be assessing, and linking `examples/` root instead would
+make them go hunting for it.
+
+## Which DataHub technologies did you use?
+
+Select:
+
+- ☑ **DataHub OSS / Core Platform** — a DataHub OSS instance, seeded with a
+  two-client catalog, read and written throughout
+- ☑ **DataHub MCP Server** — `mcp-server-datahub@0.6.0`, bundled by the plugin
+  and intercepted by `PreToolUse` on `mcp__.*datahub.*__.*`
+- ☑ **Other** — the `acryl-datahub` Python SDK (1.6.0.16) is the enforcement
+  path. A hook cannot borrow the agent's MCP connection, so evidence lookups and
+  the decision write-back go through the SDK directly. This split is described
+  in the project story under *How I built it*.
+
+Leave unchecked: Agent Context Kit, DataHub Skills, Analytics Agent — none were
+used, and claiming them would be the fastest way to lose a judge's trust.
+
+## Did you contribute to DataHub during the hackathon?
+
+**Leave blank.** No contribution was made. It is listed honestly under
+*What's next for Zence* instead.
+
+## Country of residence
+
+```
+Egypt
+```
+
+## Newly created during the Submission Period
+
+```
+Yes, newly created during the Submission Period
+```
+
+Verifiable: the repository was created 27 July 2026 and its first commit landed
+28 July 2026. The Submission Period opened 6 July 2026.
+
+## Pre-existing code disclosure
+
+```
+None. Zence was built from an empty directory during the Submission Period, with
+Claude Code as the AI coding assistant. No pre-existing project code was
+incorporated. All third-party dependencies are standard open-source libraries,
+declared in pyproject.toml and package.json.
+```
+
+The field only asks about work *outside* the allowed tools, so this could be
+left blank — but the repository already discloses the same thing in its README,
+and answering consistently costs nothing.
+
+---
+
+# Feedback prize
+
+**Answer: Yes.** It is a separate $50 prize and does not compete with the project
+submission — the rule that excludes people applies to those who submit *only*
+feedback. The answers below are real problems from this build, with repros.
+
+## Which parts of DataHub felt polished or useful?
+
+```
+Three things genuinely just worked.
+
+`datahub docker quickstart` did what it said. I have 8 GB of RAM on this
+machine so I ran it on a cloud VM instead, and the quickstart came up first try
+with no yak-shaving — for something orchestrating that many containers, that is
+not a given.
+
+The Documents API is the best-designed thing I touched. `Document.create_document(id=...)`
+plus `client.entities.upsert()` gives you idempotency structurally, from a
+deterministic id, rather than through a read-check-write that can lose a race. I
+key mine on sha256(workspace::session), so finalizing a session ten times leaves
+exactly one document with an advanced updated_at. I did not have to write a dedup
+table, and I did not have to think about concurrency. That is a real design win
+and it is under-advertised.
+
+Configuring the MCP server entirely through environment variables made it
+trivial to bundle inside a Claude Code plugin manifest — no config file to ship,
+no path to resolve, and `TOOLS_IS_MUTATION_ENABLED` is exactly the right shape
+of switch for a tool that an agent will be driving.
+```
+
+## Where did you get stuck or lose time?
+
+```
+One issue cost me more than everything else combined, and it is an API-shape
+problem rather than a bug.
+
+`Dataset.tags` does not return URN strings. It returns TagAssociationClass
+objects. `str()` on one gives:
+
+    TagAssociationClass({'tag': 'urn:li:tag:PII', 'context': None, ...})
+
+which of course never equals "urn:li:tag:PII" — but it *contains* it, it prints
+plausibly in a debugger, and it passes an `if tags:` check. I am building a
+policy engine whose central rule is "this dataset is in another domain and
+carries a PII tag", and that rule silently could not fire against a real
+DataHub. Every one of my unit tests passed, because a recorded fixture stores
+plain strings. The failure is invisible: no exception, no warning, just a set
+membership test that is always false.
+
+I only caught it because I had written a verification command that re-reads
+every seeded entity through the same code path a hook uses and diffs it against
+what it expected to find. First run against the live instance: ten problems,
+every one a missing tag.
+
+The second thing that cost me real time was the default retry behaviour. Against
+a dead endpoint the SDK took 28 seconds to give up. Inside a hook with a
+couple-of-seconds budget that is indistinguishable from a hang, and my users
+would have blamed the agent, not DataHub. `retry_max_times=0` fixes it, but I
+found that by reading source, not docs — and "I am calling this from somewhere
+latency-sensitive" is a common enough situation to deserve a documented answer.
+
+Third, smaller: mutation tools are disabled by default on the MCP server. That is
+the right default. It took me a while to find that `TOOLS_IS_MUTATION_ENABLED`
+was the switch, because I was looking for the reason writes were missing rather
+than for a flag that turns them on.
+```
+
+## If you had unlimited engineering time on DataHub, what would you build or fix first?
+
+```
+Make the association classes behave like the URNs people are actually reaching
+for. Any of these would have saved me the bug above:
+
+  - `__eq__` against a plain URN string
+  - a `str()` that returns the URN rather than a repr of the object
+  - a typed `.tag_urns` / `.urns` accessor on the collection, so the obvious
+    thing to reach for is also the correct one
+  - failing all of that, one line in the entity docs showing the unwrapping
+
+The general principle: when a getter returns a wrapper around the thing the
+caller wants, and the wrapper's repr contains the thing, you have built a
+failure mode that is silent, type-checks fine, and passes every test written
+against fixtures. Mine survived a full unit suite, mypy in strict mode, and a
+code review.
+
+Second, a documented low-latency profile — a short section on calling the SDK
+from an agent hook, a CI step, or anywhere with a deadline: which timeouts and
+retries to set, what to expect on a cold connection, and what an unreachable GMS
+looks like from the client's side. Agent integrations are the whole theme of
+this hackathon, and every one of them is going to be latency-sensitive in a way
+an ingestion job never was.
+
+Both matter for the same reason: the teams wiring DataHub into agents are
+writing code that must fail *loudly and fast*, and the SDK's current defaults
+are tuned for batch jobs that can afford to be patient and forgiving.
+```
+
+## Any bugs, errors, or unexpected behaviour?
+
+```
+1. TagAssociationClass identity — the one described above.
+
+   What I did:      read a dataset via the SDK and compared its tags against a
+                    set of URN strings from my policy file
+   What I expected: `"urn:li:tag:PII" in dataset.tags` to be true for a dataset
+                    tagged PII
+   What happened:   always false. `dataset.tags` yields TagAssociationClass
+                    objects; `str()` on one returns
+                    TagAssociationClass({'tag': 'urn:li:tag:PII', ...})
+   Impact:          silent. No exception, no warning. My PII-detection rule
+                    could not fire against a real DataHub while every fixture-
+                    based test passed
+   Versions:        acryl-datahub 1.6.0.16, DataHub OSS 1.5.0.6
+   Workaround:      unwrap by attribute, checking `tag` then `urn` then `owner`
+                    before falling back to str()
+
+2. Default retry latency against an unreachable GMS.
+
+   What I did:      called the SDK with a GMS URL that was not listening
+   What I expected: to fail in about a second so I could return a safe decision
+   What happened:   28 seconds of retry-with-backoff before it gave up
+   Impact:          inside a Claude Code hook this reads as the agent hanging.
+                    A DataHub outage becomes a Claude Code bug report
+   Workaround:      retry_max_times=0 and an explicit timeout, found by reading
+                    source rather than docs
+
+3. Read timeout on a tunnelled connection (reporting rather than complaining).
+
+   Reaching a remote GMS over an SSH tunnel, the first request costs ~11s of
+   connection setup and subsequent GraphQL searches intermittently exceed the
+   4s read timeout. My code degrades to "ask" and says why, which is the
+   behaviour I want — but a configurable read timeout, or a documented note that
+   the first call carries connection setup, would have saved me an hour of
+   suspecting my own code.
+```
