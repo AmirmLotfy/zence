@@ -173,23 +173,25 @@ def square_icon(padding_ratio: float = 0.11) -> str:
     dx = (side - W * scale) / 2
     dy = (side - H * scale) / 2
     return (
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {side} {side}" '
-        f'role="img" aria-label="Zence">\n'
-        "  <title>Zence</title>\n"
-        "  <style>\n"
-        f"    .ink {{ fill: {INK_DARK}; }}\n"
-        f"    .accent {{ fill: {ACCENT_ON_LIGHT}; }}\n"
-        "    @media (prefers-color-scheme: dark) {\n"
-        f"      .ink {{ fill: {INK_LIGHT}; }}\n"
-        f"      .accent {{ fill: {ACCENT_ON_DARK}; }}\n"
-        "    }\n"
-        "  </style>\n"
-        f'  <g transform="translate({dx:.1f} {dy:.1f}) scale({scale:.5f})">\n'
-        f"{_shapes('currentColor', 'currentColor', indent='    ')}\n"
-        "  </g>\n"
-        "</svg>\n"
-    ).replace('<g fill="currentColor">', '<g class="ink">').replace(
-        ' fill="currentColor"/>', ' class="accent"/>'
+        (
+            f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {side} {side}" '
+            f'role="img" aria-label="Zence">\n'
+            "  <title>Zence</title>\n"
+            "  <style>\n"
+            f"    .ink {{ fill: {INK_DARK}; }}\n"
+            f"    .accent {{ fill: {ACCENT_ON_LIGHT}; }}\n"
+            "    @media (prefers-color-scheme: dark) {\n"
+            f"      .ink {{ fill: {INK_LIGHT}; }}\n"
+            f"      .accent {{ fill: {ACCENT_ON_DARK}; }}\n"
+            "    }\n"
+            "  </style>\n"
+            f'  <g transform="translate({dx:.1f} {dy:.1f}) scale({scale:.5f})">\n'
+            f"{_shapes('currentColor', 'currentColor', indent='    ')}\n"
+            "  </g>\n"
+            "</svg>\n"
+        )
+        .replace('<g fill="currentColor">', '<g class="ink">')
+        .replace(' fill="currentColor"/>', ' class="accent"/>')
     )
 
 
@@ -243,9 +245,7 @@ TARGETS = {
         INK_LIGHT, ACCENT_ON_DARK, "Zence — for dark backgrounds"
     ),
     "brand/zence-icon.svg": square_icon,
-    "brand/zence-icon-field.svg": lambda: on_field(
-        INK_DARK, INK_LIGHT, ACCENT_ON_DARK, 512, 0.16
-    ),
+    "brand/zence-icon-field.svg": lambda: on_field(INK_DARK, INK_LIGHT, ACCENT_ON_DARK, 512, 0.16),
     "apps/web/app/icon.svg": square_icon,
     "apps/web/public/zence-mark-on-light.svg": lambda: mark(
         INK_DARK, ACCENT_ON_LIGHT, "Zence — for light backgrounds"
@@ -282,8 +282,18 @@ def _rasterize() -> None:
 
     for source, target, size in RASTERS:
         subprocess.run(
-            ["magick", "-background", "none", str(REPO / source),
-             "-resize", size, "-depth", "8", "-strip", str(REPO / target)],
+            [
+                "magick",
+                "-background",
+                "none",
+                str(REPO / source),
+                "-resize",
+                size,
+                "-depth",
+                "8",
+                "-strip",
+                str(REPO / target),
+            ],
             check=True,
         )
         print(f"wrote {target}")

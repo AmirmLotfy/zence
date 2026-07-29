@@ -47,6 +47,15 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S", "E501"]
 
+# The logo generator is a developer tool, not shipped code: nothing imports it,
+# it runs by hand when the mark changes, and its only inputs are literals in the
+# file itself. `S603`/`S607` exist to stop untrusted input reaching a shell —
+# there is no input here, and `magick` is deliberately resolved from PATH
+# because that is where a developer's ImageMagick lives. Narrow on purpose:
+# everything else in the `S` set still applies, and the rest of the rule set is
+# untouched, so a real mistake in these files is still caught.
+"brand/*.py" = ["S603", "S607", "RUF002"]
+
 # --- Types -------------------------------------------------------------------
 
 [tool.mypy]

@@ -64,8 +64,15 @@ def compare(source: pathlib.Path, box: tuple[int, int, int, int], vector: pathli
     with tempfile.TemporaryDirectory() as tmp:
         rendered = pathlib.Path(tmp) / "vector.png"
         subprocess.run(
-            ["magick", "-background", "none", str(vector),
-             "-resize", f"{width}x{height}!", str(rendered)],
+            [
+                "magick",
+                "-background",
+                "none",
+                str(vector),
+                "-resize",
+                f"{width}x{height}!",
+                str(rendered),
+            ],
             check=True,
         )
         vec = Image.open(rendered).convert("RGBA")
@@ -104,9 +111,7 @@ def main() -> int:
     for relative, (box, tolerance) in SOURCES.items():
         source = ROOT / relative
         vector = ROOT / (
-            "zence-mark-on-dark.svg"
-            if "on-dark" in relative
-            else "zence-mark-on-light.svg"
+            "zence-mark-on-dark.svg" if "on-dark" in relative else "zence-mark-on-light.svg"
         )
         counts, image = compare(source, box, vector)
         tiles.append(image)
