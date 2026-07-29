@@ -5,6 +5,7 @@ import { Card, Code, Section } from "@/components/primitives";
 export const metadata: Metadata = {
   title: "Architecture",
   description: "How Zence is put together, and why each piece is where it is.",
+  alternates: { canonical: "/architecture/" },
 };
 
 export default function ArchitecturePage() {

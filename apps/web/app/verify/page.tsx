@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Verify",
   description:
     "Check every claim on this site yourself — no signup, no hosted service, nothing to trust.",
+  alternates: { canonical: "/verify/" },
 };
 
 const REPO = "https://github.com/AmirmLotfy/zence";

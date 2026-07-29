@@ -5,6 +5,7 @@ import { Card, Code, Section } from "@/components/primitives";
 export const metadata: Metadata = {
   title: "Open source",
   description: "Apache-2.0, built in the open for the DataHub Agent Hackathon.",
+  alternates: { canonical: "/open-source/" },
 };
 
 export default function OpenSourcePage() {

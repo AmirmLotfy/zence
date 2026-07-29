@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "Demo",
   description:
     "Six real Zence decisions, recorded from actual runs against the synthetic demo catalog.",
+  alternates: { canonical: "/demo/" },
 };
 
 export default function DemoPage() {

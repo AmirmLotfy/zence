@@ -5,6 +5,20 @@
 
 ---
 
+> **This is the plan as written on 28 July 2026, kept unedited.** It is a record
+> of what was intended, not a description of what exists — so parts of it are
+> now out of date on purpose. Two that matter: it plans **14** rules, and 12
+> shipped (exception handling moved into the precedence chain, where it belongs,
+> rather than being two rules of its own); and it names `zence.vercel.app` as the
+> submitted URL, a contingency for DNS still being pending at the deadline. DNS
+> resolved, and the site is at **[zence.site](https://zence.site)**.
+>
+> For what was actually built and verified, see **[TASKS.md](../TASKS.md)**.
+> Rewriting a plan after the fact to match the outcome would destroy the only
+> useful thing about keeping one.
+
+---
+
 ## 1. Context
 
 **Why this is being built.** Freelancers, agencies, and consultancies run Claude Code across

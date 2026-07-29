@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Security",
   description:
     "What Zence protects against, what it explicitly does not, and how it behaves when it cannot see.",
+  alternates: { canonical: "/security/" },
 };
 
 const THREATS: [string, string][] = [

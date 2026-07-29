@@ -5,6 +5,7 @@ import { Code, Section } from "@/components/primitives";
 export const metadata: Metadata = {
   title: "Docs",
   description: "Install Zence, describe a boundary, and check that it works.",
+  alternates: { canonical: "/docs/" },
 };
 
 // A lookup, not an interpolated class name. Tailwind extracts class names

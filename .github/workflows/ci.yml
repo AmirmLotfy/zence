@@ -132,6 +132,18 @@ jobs:
           done
           echo "all 7 routes exported"
 
+          # A page added without a sitemap entry is invisible to anything that
+          # crawls, and nothing else would notice.
+          for route in index demo verify docs architecture security open-source; do
+            path="/${route}/"
+            [ "$route" = "index" ] && path="/"
+            grep -q "<loc>https://zence.site${path}</loc>" apps/web/out/sitemap.xml \
+              || { echo "::error::sitemap.xml is missing ${path}"; exit 1; }
+          done
+          grep -q "https://zence.site/sitemap.xml" apps/web/out/robots.txt \
+            || { echo "::error::robots.txt does not point at the sitemap"; exit 1; }
+          echo "sitemap and robots.txt agree with the routes"
+
       # /verify sends judges straight into the repository. A link that 404s
       # there is worse than no link, and renaming a file is exactly how it would
       # happen — silently, in a commit about something else.

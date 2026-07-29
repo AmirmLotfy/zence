@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { FEATURED } from "./_data/scenarios";
 import { Card, Code, Section, SyntheticNotice, VerdictBadge } from "@/components/primitives";
 import { ScenarioTabs } from "@/components/replay";
+
+// Title and description come from the root layout; this exists to name the
+// canonical URL. The deployment also answers on a *.vercel.app hostname, and
+// two live copies of the same page should not compete with each other.
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 export default function Home() {
   return (
