@@ -13,10 +13,13 @@
 
 ---
 
-> **Live:** [zence.site](https://zence.site) · **Status: in active development** for
+> **Live:** [zence.site](https://zence.site) · Built for
 > [Build with DataHub: The Agent Hackathon](https://datahub.devpost.com/).
-> This README documents intended behaviour. Anything not yet covered by a passing test is
-> marked **(not yet implemented)**. Nothing here is claimed as working before it is demonstrated.
+>
+> Everything described below is implemented and covered by tests — 401 of them, plus fifteen
+> run against a live DataHub instance. What Zence deliberately does *not* do has its own
+> section, and the boundary is stated rather than implied. You can check any of it in about a
+> minute at [zence.site/verify](https://zence.site/verify/).
 
 ## The problem
 
