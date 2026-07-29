@@ -144,7 +144,7 @@ Three design choices carry it:
   realistic asset
 - A static site at zence.site rendering **real** engine output, kept honest by a
   CI check
-- 341 tests, mypy strict, seven CI jobs, secret scanning with no allowlist
+- 386 tests, mypy strict, eight CI jobs, secret scanning with no allowlist
 
 ## Challenges
 
@@ -218,12 +218,12 @@ stayed green. None of those would have been caught by assuming.
 Everything below works from a clean clone. No account, no signup, no hosted
 service.
 
-**Without DataHub** — the engine, extraction, hooks, and 341 tests:
+**Without DataHub** — the engine, extraction, hooks, and 386 tests:
 
 ```bash
 git clone https://github.com/AmirmLotfy/zence && cd zence
 uv sync --all-packages
-uv run pytest -m "not integration and not e2e"
+uv run pytest -m "not integration and not e2e"   # 386 tests, no catalog needed
 ```
 
 **The decisions themselves**, against the recorded catalog:
