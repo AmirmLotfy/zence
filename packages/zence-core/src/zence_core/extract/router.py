@@ -35,19 +35,56 @@ FILE_TOOLS: dict[str, str] = {
 #: Tools that only read.
 READ_TOOLS: frozenset[str] = frozenset({"Read", "Glob", "Grep", "NotebookRead"})
 
+#: Words that mark the thing next to them as a credential.
+# The suppression on the next line is for bandit, which sees a variable whose
+# name contains "secret" holding a string literal and assumes a hardcoded
+# credential. It is the opposite: this is the pattern that finds and removes them.
+_SECRET_WORD = r"(?:password|passwd|secret|token|api[_\-]?key|apikey|credential|auth)"  # noqa: S105
+
 #: Values matching these are replaced before the excerpt is stored. Zence's audit
 #: trail must never become the place a leaked token lives.
+#:
+#: Ordered: specific token *shapes* first, then key/value forms, then the flag
+#: form. Three of these exist because an adversarial test found the naive
+#: versions leaking — `Authorization: Bearer <token>` redacted the word "Bearer"
+#: and left the token intact, `--api-key <token>` was not covered at all, and a
+#: quoted key (`'token': '<value>'`) broke the key/value pattern.
 _REDACTIONS: tuple[tuple[re.Pattern[str], str], ...] = (
+    # Recognisable shapes, regardless of what they are assigned to.
     (re.compile(r"\b(gh[pousr]_[A-Za-z0-9]{16,})\b"), "«github-token»"),
     (re.compile(r"\bsk-[A-Za-z0-9_\-]{16,}\b"), "«api-key»"),
     (re.compile(r"\beyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]+"), "«jwt»"),
-    (re.compile(r"(?i)\b(authorization|bearer)\s*[:=]\s*\S+"), r"\1 «redacted»"),
+    (re.compile(r"\bxox[baprs]-[A-Za-z0-9\-]{10,}\b"), "«slack-token»"),
+    (re.compile(r"\bAKIA[0-9A-Z]{16}\b"), "«aws-key-id»"),
+    # `Authorization: Bearer <token>` and bare `Bearer <token>`. The scheme is
+    # kept so the shape stays readable; the credential after it is what matters.
+    (
+        re.compile(r"(?i)\b(bearer|basic|token)\s+[A-Za-z0-9._\-+/=]{8,}"),
+        r"\1 «redacted»",
+    ),
+    (re.compile(r"(?i)\bauthorization\s*[:=]\s*\S+"), "authorization: «redacted»"),
+    # `token=x`, `"token": "x"`, `'api_key' => 'x'` — the key may be quoted, and
+    # the separator may be `:`, `=`, or `=>`.
+    #
+    # Every quantifier here is bounded. Unbounded `[\w.\-]*` on both sides of the
+    # alternation makes the engine try every split point at every position, which
+    # is superlinear: 10 KB of ordinary text took 2.4 seconds, and this runs on
+    # every tool call. A credential key longer than 32 characters either side of
+    # the word is not a real thing.
     (
         re.compile(
-            r"(?i)\b([\w.\-]*(?:password|passwd|secret|token|api[_\-]?key|credential)[\w.\-]*)"
-            r"\s*[:=]\s*[\"']?[^\s\"',;]+"
+            rf"(?i)([\"']?)([\w.\-]{{0,32}}{_SECRET_WORD}[\w.\-]{{0,32}})\1"
+            r"[ \t]*(?::|=>?)[ \t]*"
+            r"[\"']?[^\s\"',;)}\]]{1,512}[\"']?"
         ),
-        r"\1=«redacted»",
+        r"\2=«redacted»",
+    ),
+    # `--api-key <value>`: a flag whose name says credential.
+    (
+        re.compile(
+            rf"(?i)(--?[\w-]{{0,32}}{_SECRET_WORD}[\w-]{{0,32}})[=\s]{{1,4}}[^\s\"',;]{{1,512}}"
+        ),
+        r"\1 «redacted»",
     ),
     (re.compile(r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b"), "«email»"),
 )
@@ -58,16 +95,31 @@ _SQL_HINT = re.compile(
 )
 
 
+#: Hard cap on what the redaction patterns are allowed to scan.
+#:
+#: Redaction runs before truncation on purpose — truncating to the excerpt
+#: length first could sever a secret's terminator and defeat the pattern. But
+#: "before truncation" cannot mean "unbounded": these patterns contain
+#: quantifiers that backtrack, and a 200 KB file content made `redact` hang.
+#: This is generous enough that no realistic credential spans it, and small
+#: enough that the scan stays linear in practice.
+MAX_REDACTION_SCAN_CHARS = 64 * 1024
+
+
 def redact(text: str, limit: int = MAX_EXCERPT_CHARS) -> str:
     """Strip credentials and personal data, then truncate.
 
-    Redaction runs before truncation on purpose: truncating first could leave a
-    secret's prefix intact and its terminator cut off, defeating the pattern.
+    Order matters in both directions. Truncating to the excerpt length first
+    would leave a secret's prefix intact with its terminator cut off, so
+    redaction goes first — but only over a bounded window, because the patterns
+    themselves are not free on arbitrarily long input.
     """
     if not text:
         return ""
 
-    cleaned = text
+    # Bound the work before the patterns see it. Anything past this window is
+    # discarded rather than scanned; the excerpt is truncated far shorter anyway.
+    cleaned = text[:MAX_REDACTION_SCAN_CHARS]
     for pattern, replacement in _REDACTIONS:
         cleaned = pattern.sub(replacement, cleaned)
 

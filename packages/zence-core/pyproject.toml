@@ -10,6 +10,10 @@ dependencies = [
     "pydantic>=2.10",
     "PyYAML>=6.0",
     "sqlglot>=26.0",
+    # `re` has no evaluation timeout, and a length cap does not bound
+    # catastrophic backtracking: 40 characters against `(a+)+b` runs for
+    # minutes. `regex` supports a hard per-match timeout, which does.
+    "regex>=2024.11.6",
 ]
 
 [project.optional-dependencies]

@@ -16,12 +16,18 @@ fail-safe matrix in `defaults.py` — never by accident inside a predicate.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Callable, Iterable
 from typing import Any
 
+import regex
+
 from zence_core.policy.fields import EvalContext, FieldValue, resolve
 from zence_core.schemas import MAX_SUBJECT_CHARS, Predicate
+
+#: Hard bound on a single regex evaluation. Well under the hook's own
+#: watchdog, so a pathological pattern costs one predicate rather than the
+#: whole decision.
+MATCH_TIMEOUT_SECONDS = 0.25
 
 #: Resolves a `$name` reference to its declared list.
 ListResolver = Callable[[str], list[str]]
@@ -72,13 +78,37 @@ def _op_intersects(field: FieldValue, operand: Any) -> bool:
 
 
 def _op_matches(field: FieldValue, operand: Any) -> bool:
+    """Anchored regex, with a hard evaluation timeout.
+
+    A length cap alone does **not** bound catastrophic backtracking — 40
+    characters of `a` against `(a+)+b` runs for minutes under `re`, and a policy
+    file can arrive with a cloned repository. So this uses the `regex` module,
+    which both optimizes away the classic ReDoS shapes and, unlike `re`,
+    supports a per-match `timeout`.
+
+    On timeout the predicate returns False, meaning *this rule did not match*.
+    Failing the predicate rather than the evaluation keeps the action flowing to
+    the fail-safe matrix, which decides on the evidence it does have.
+    """
     if field is None or not isinstance(operand, str):
         return False
+
     subjects: Iterable[str]
     subjects = field if isinstance(field, frozenset) else [str(field)]
-    # Anchored and length-bounded. See MAX_SUBJECT_CHARS in schemas.policy for why.
-    pattern = re.compile(operand)
-    return any(pattern.fullmatch(subject[:MAX_SUBJECT_CHARS]) is not None for subject in subjects)
+
+    try:
+        pattern = regex.compile(operand)
+        return any(
+            pattern.fullmatch(subject[:MAX_SUBJECT_CHARS], timeout=MATCH_TIMEOUT_SECONDS)
+            is not None
+            for subject in subjects
+        )
+    except TimeoutError:
+        return False
+    except regex.error:
+        # Rejected at policy load; unreachable unless a pattern was constructed
+        # some other way. Not matching is the safe reading either way.
+        return False
 
 
 def _op_gte(field: FieldValue, operand: Any) -> bool:

@@ -205,6 +205,27 @@ slow. The hook watchdog is the backstop, and it converts a hang into an `ask`.
 
 ---
 
+## Accepted risks
+
+Rather than a clean audit that hides a judgment call:
+
+**GHSA-mh99-v99m-4gvg — `brace-expansion` unbounded expansion (high).**
+Reached only through `eslint → @eslint/config-array → minimatch`. It is a
+lint-time dependency; nothing in Zence's runtime or in the published site touches
+it, and exploiting it requires attacker-controlled glob patterns, which come from
+our own config file.
+
+The fix exists only in 5.x, which changed the export from a function to an object
+— forcing it makes eslint fail outright. The 1.x line is genuinely unpatched:
+1.1.16 expands a small input to 1,048,576 items with no limit, which we verified
+rather than assumed. Recorded in `pnpm-workspace.yaml` with the same reasoning,
+and Dependabot will open a PR when minimatch moves.
+
+Three other advisories found at the same time — `sharp` (libvips CVEs) and two in
+`postcss` — **were** fixed, by pinning patched versions through overrides.
+
+---
+
 ## Reporting
 
 Please use a [private security advisory](https://github.com/AmirmLotfy/zence/security/advisories/new)

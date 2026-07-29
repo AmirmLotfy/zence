@@ -1,0 +1,29 @@
+# Continuous dependency auditing for both ecosystems.
+#
+# Preferred over a `pip-audit` step in CI: Dependabot checks against the
+# advisory database as advisories land, not only when someone happens to push,
+# and it opens a PR with the fix rather than just failing a build.
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(ci)"

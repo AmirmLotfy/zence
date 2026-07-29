@@ -51,10 +51,12 @@ OPERATORS: frozenset[str] = frozenset(
     )
 )
 
-#: Regex predicates are compiled at load time and bounded in length. Python's `re`
-#: has no evaluation timeout, so the defence is: reject long patterns, bound the
-#: subject string, and rely on the hook's own timeout plus the fail-safe matrix as
-#: the backstop. See docs/THREAT_MODEL.md.
+#: Regex predicates are compiled at load time and bounded in length.
+#:
+#: The length cap is hygiene, not the defence — it does not bound catastrophic
+#: backtracking, which is exponential in the *subject*. The real bound is the
+#: per-match timeout in policy.predicates, using the `regex` module because
+#: `re` offers no such thing. See docs/THREAT_MODEL.md.
 MAX_PATTERN_CHARS = 200
 MAX_SUBJECT_CHARS = 4_096
 

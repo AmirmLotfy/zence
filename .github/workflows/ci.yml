@@ -140,6 +140,38 @@ jobs:
           fi
           echo "fonts are self-hosted"
 
+  audit:
+    name: Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v9.0.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - run: uv sync --all-packages --extra datahub
+
+      # Python advisories are handled by Dependabot (.github/dependabot.yml)
+      # rather than a CI step: `pip-audit` needs to resolve a whole environment
+      # and chokes on this workspace's own unpublished editable packages, and
+      # Dependabot checks as advisories land rather than only when someone
+      # pushes — then opens a PR with the fix.
+      - name: Lockfile is current
+        run: uv lock --check
+
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Node dependencies
+        run: pnpm audit --audit-level high
+
   docs:
     name: Documentation
     runs-on: ubuntu-latest
