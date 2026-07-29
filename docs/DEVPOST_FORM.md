@@ -236,6 +236,8 @@ between a tool you can trust and one you have to second-guess.
   rather than only recording its own decisions
 - **A skill contributed upstream** to `datahub-project/datahub-skills` covering
   domain-boundary and PII-aware asset selection, which fell out of building this
+  — and a PR for [#18726](https://github.com/datahub-project/datahub/issues/18726),
+  the SDK issue above, if the maintainers say which fix they want
 
 ---
 
@@ -361,8 +363,20 @@ used, and claiming them would be the fastest way to lose a judge's trust.
 
 ## Did you contribute to DataHub during the hackathon?
 
-**Leave blank.** No contribution was made. It is listed honestly under
-*What's next for Zence* instead.
+```
+https://github.com/datahub-project/datahub/issues/18726
+```
+
+An issue against the Python SDK, filed 29 July 2026: association wrappers whose
+`str()` looks like a URN but never compares equal, while `.domain` on the same
+object does. Found while building Zence — it is the bug described under
+*Challenges*, written up for the people who can fix it rather than only
+described in a submission.
+
+Issues count: the field says "PRs, RFCs, issues, or other contributions."
+
+Still do **not** list the `datahub-skills` PR. That is the other entry's
+contribution and would be claimed twice.
 
 ## Country of residence
 

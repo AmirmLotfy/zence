@@ -283,15 +283,22 @@ contacts.
 
 ## Open-source contribution
 
-**None to claim for this submission.** The plan called for a
-`datahub-policy-context` skill upstream in `datahub-project/datahub-skills`; it
-was not made, so nothing is claimed against the bonus criterion here. The one
-open PR on that repository from this account
-([#58](https://github.com/datahub-project/datahub-skills/pull/58)) belongs to a
-different project and is not offered as part of Zence.
+[**datahub-project/datahub#18726**](https://github.com/datahub-project/datahub/issues/18726) — a silent-failure report against
+the Python SDK, found while building this.
 
-Leave this section out of the Devpost form unless a contribution actually
-lands first.
+`Dataset.tags`, `.terms` and `.owners` return association wrappers whose
+`str()` is a repr *containing* the URN, so `"urn:li:tag:PII" in ds.tags` is
+always `False` — while `.domain` on the same object stringifies to its URN and
+behaves as expected. No exception, no warning, and `bool(ds.tags)` is still
+`True`, so the attribute looks present and only the comparison is wrong. Any
+fixture-based test agrees with the broken code.
+
+It cost me a day and broke the central rule of this engine against a real
+catalog. The report carries a runnable repro, versions, four ranked fixes, and
+an offer to open the PR.
+
+Not manufactured for the bonus: it is the same bug described under *Challenges*,
+written up for the people who can fix it.
 
 ## Disclosure
 

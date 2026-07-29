@@ -54,8 +54,8 @@ ASK — which is the behaviour that matters and is pinned by a contract test.
 - [ ] Decide the challenge category — the submission currently names *Metadata-Aware
       Code Generation & Development*, but Zence governs generated code rather than
       generating it. *Agents That Do Real Work* matches the wording more closely
-- [ ] Optional, for the bonus criterion: an upstream contribution to
-      `datahub-project/datahub-skills`. **Not made** — nothing is claimed for it
+- [x] Bonus criterion: [datahub-project/datahub#18726](https://github.com/datahub-project/datahub/issues/18726) — the SDK
+      association-wrapper silent failure, reported with a repro and four fixes
 - [ ] Stop the VM when not demoing: `gcloud compute instances stop zence-datahub --zone=europe-west1-b`
       (nothing a judge needs depends on it — the recording covers the read path,
       and the website is static)
