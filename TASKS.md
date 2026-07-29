@@ -51,6 +51,11 @@ ASK — which is the behaviour that matters and is pinned by a contract test.
 
 - [ ] Record and upload the demo video ([docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md), timed at 2:45)
 - [ ] Submit on Devpost ([docs/DEVPOST_SUBMISSION.md](docs/DEVPOST_SUBMISSION.md) is copy-ready)
+- [ ] Decide the challenge category — the submission currently names *Metadata-Aware
+      Code Generation & Development*, but Zence governs generated code rather than
+      generating it. *Agents That Do Real Work* matches the wording more closely
+- [ ] Optional, for the bonus criterion: an upstream contribution to
+      `datahub-project/datahub-skills`. **Not made** — nothing is claimed for it
 - [ ] Stop the VM when not demoing: `gcloud compute instances stop zence-datahub --zone=europe-west1-b`
       (nothing a judge needs depends on it — the recording covers the read path,
       and the website is static)

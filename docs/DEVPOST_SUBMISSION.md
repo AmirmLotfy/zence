@@ -282,9 +282,15 @@ contacts.
 
 ## Open-source contribution
 
-A `datahub-policy-context` skill contributed to `datahub-project/datahub-skills`,
-covering domain-boundary and PII-aware asset selection — a byproduct of building
-this, not a manufactured contribution.
+**None to claim for this submission.** The plan called for a
+`datahub-policy-context` skill upstream in `datahub-project/datahub-skills`; it
+was not made, so nothing is claimed against the bonus criterion here. The one
+open PR on that repository from this account
+([#58](https://github.com/datahub-project/datahub-skills/pull/58)) belongs to a
+different project and is not offered as part of Zence.
+
+Leave this section out of the Devpost form unless a contribution actually
+lands first.
 
 ## Disclosure
 
