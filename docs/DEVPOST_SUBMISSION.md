@@ -144,7 +144,7 @@ Three design choices carry it:
   realistic asset
 - A static site at zence.site rendering **real** engine output, kept honest by a
   CI check
-- 386 tests, mypy strict, eight CI jobs, secret scanning with no allowlist
+- 401 tests, mypy strict, eight CI jobs, secret scanning with no allowlist
 
 ## Challenges
 
@@ -164,6 +164,19 @@ that was:
 - The SDK's default retry-with-backoff took **28 seconds** to fail against a
   dead endpoint, in a hook with a 2.5-second budget. A DataHub outage would
   have read as Claude Code hanging.
+
+**The one that only a live catalog could find.** `Dataset.tags` does not return
+URN strings — it returns `TagAssociationClass` objects, and `str()` on one gives
+`TagAssociationClass({'tag': 'urn:li:tag:PII', ...})`, which never equals
+`urn:li:tag:PII`. **ZR-001 could not fire against a real DataHub**: the
+cross-client PII denial, the single thing this project is for, did nothing
+outside of tests. Every unit test agreed with the broken code, because a
+recorded fixture stores plain strings.
+
+`zence demo verify` caught it on the first run against the instance — ten
+problems, every one a missing tag. That command exists because seeding is a
+batch of upserts that mostly succeeds, and "mostly" is how a demo fails in front
+of an audience. It earned its place immediately.
 
 **Precision as a safety property.** An extractor that reports table aliases and
 CTE names produces a prompt on every action, people learn to approve
