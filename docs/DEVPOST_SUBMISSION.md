@@ -234,8 +234,13 @@ uv run zence evaluate --tool Write --file models/blend.sql \
              FROM northstar.marketing_leads l
              JOIN bluepeak.patient_contacts p ON p.email = l.email" \
   -C examples/clients/northstar-analytics
-# exit 6 — DENY, ZR-001
+# exit 7 — ASK. Without a catalog Zence cannot see the domains, so it refuses
+# to guess and says so. With DataHub running this is exit 6, DENY, ZR-001.
 ```
+
+That difference is worth a moment: the same command gives a different — and
+correct — answer depending on whether the catalog is reachable. Zence never
+converts ignorance into permission.
 
 **With DataHub**, for the full loop including write-back:
 
