@@ -3,6 +3,23 @@ name: Integration (live DataHub)
 # Deliberately NOT run on every pull request. These tests need a real DataHub
 # instance; spinning one up costs ~8 GB RAM and several minutes per run.
 # CI proper (ci.yml) covers the same code paths against recorded fixtures.
+#
+# **On demand only, and there used to be a nightly cron here.** It was removed
+# because it could not succeed: the catalog these tests need lives on a private
+# VM reached over an SSH tunnel, so a GitHub runner cannot get to it, and
+# `DATAHUB_GMS_URL` / `DATAHUB_GMS_TOKEN` are deliberately not repository
+# secrets — publishing that endpoint to make a nightly go green would be a worse
+# trade than not having the nightly.
+#
+# So every night it failed on the credential check below. That check is correct
+# and stays: a run without a catalog must fail loudly rather than pass while
+# testing nothing. What was wrong was scheduling it into an environment where
+# the only possible outcome was that failure — a permanently red badge that
+# meant "not configured here", which is indistinguishable at a glance from
+# "this project is broken".
+#
+# Run it with `gh workflow run integration.yml` from somewhere the catalog is
+# reachable, or `uv run pytest -m integration` locally with the tunnel up.
 on:
   workflow_dispatch:
     inputs:
@@ -10,8 +27,6 @@ on:
         description: "Re-seed the synthetic catalog before running"
         type: boolean
         default: false
-  schedule:
-    - cron: "0 3 * * *" # nightly, 03:00 UTC
 
 permissions:
   contents: read

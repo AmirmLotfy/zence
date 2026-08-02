@@ -74,6 +74,17 @@ uv run zence demo seed && uv run zence demo verify
 uv run pytest -m integration
 ```
 
-These run on demand and nightly, not on every pull request. Standing up an 8 GB
-catalog per PR would be slow and would make the suite flaky for reasons
-unrelated to the change.
+These run **on demand**, not on every pull request. Standing up an 8 GB catalog
+per PR would be slow and would make the suite flaky for reasons unrelated to the
+change.
+
+There was a nightly cron on `integration.yml` and it has been removed. The
+catalog these tests need is on a private VM behind an SSH tunnel, so a GitHub
+runner cannot reach it, and its endpoint is deliberately not a repository
+secret. The nightly therefore failed every night on the credential check — a
+permanently red badge that only ever meant "no catalog configured here". That is
+indistinguishable at a glance from "this project is broken", and a signal that
+can only say one thing is not a signal.
+
+The credential check itself stays. A run launched without a catalog must fail
+loudly rather than pass having tested nothing.
