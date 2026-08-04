@@ -207,22 +207,27 @@ slow. The hook watchdog is the backstop, and it converts a hang into an `ask`.
 
 ## Accepted risks
 
-Rather than a clean audit that hides a judgment call:
+**None currently.** `pnpm audit --audit-level high` reports no known
+vulnerabilities, and nothing is on an ignore list. This section exists because a
+clean audit that hides a judgment call is worse than a documented one — if an
+advisory is ever accepted rather than fixed, the reasoning belongs here.
 
-**GHSA-mh99-v99m-4gvg — `brace-expansion` unbounded expansion (high).**
-Reached only through `eslint → @eslint/config-array → minimatch`. It is a
-lint-time dependency; nothing in Zence's runtime or in the published site touches
-it, and exploiting it requires attacker-controlled glob patterns, which come from
-our own config file.
+There was one, and how it ended is the useful part. **GHSA-mh99-v99m-4gvg**,
+`brace-expansion` unbounded expansion, was accepted on the grounds that the fix
+existed only in 5.x, which changed the export from a function to an object and
+made eslint fail outright — the 1.x line was genuinely unpatched, verified by
+watching 1.1.16 expand a small input to 1,048,576 items.
 
-The fix exists only in 5.x, which changed the export from a function to an object
-— forcing it makes eslint fail outright. The 1.x line is genuinely unpatched:
-1.1.16 expands a small input to 1,048,576 items with no limit, which we verified
-rather than assumed. Recorded in `pnpm-workspace.yaml` with the same reasoning,
-and Dependabot will open a PR when minimatch moves.
+That reasoning was correct when written and stopped being correct without anyone
+touching this repository: the fix was backported to **1.1.17**. A second
+advisory, **GHSA-rgw5-rvv9-x895**, then found a bypass of that mitigation, fixed
+in **1.1.18** and **5.0.9**. Both are now pinned per major in
+`pnpm-workspace.yaml`, so each consumer gets the patch for the API it expects and
+eslint keeps working.
 
-Three other advisories found at the same time — `sharp` (libvips CVEs) and two in
-`postcss` — **were** fixed, by pinning patched versions through overrides.
+The lesson worth keeping: an accepted risk is a claim with an expiry date nobody
+tells you about. This one was re-checked because CI went red for an unrelated
+reason. It should have been re-checked on a schedule.
 
 ---
 

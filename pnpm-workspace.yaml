@@ -18,33 +18,19 @@ allowBuilds:
 #
 #   sharp           <0.35.0   libvips CVEs (Next's image pipeline)
 #   postcss         <8.5.18   arbitrary file read; sourceMappingURL traversal
-#   brace-expansion <5.0.8    DoS via unbounded expansion
+#   brace-expansion            two DoS advisories, see below
 #
-# brace-expansion is pinned per major rather than forced to >=5.0.8. The advisory
-# names the 5.x patch, but v5 changed the export shape and eslint — which pulls
-# it in through minimatch — fails with "expand is not a function". The fix is
-# backported, so each consumer gets the patch for the API it expects.
+# brace-expansion is pinned **per major**, not forced to one version. Forcing the
+# 5.x patch onto everything is what breaks eslint: v5 changed the export from a
+# function to an object and eslint, which reaches it through minimatch, dies with
+# "expand is not a function". Both fixes are backported, so each consumer gets
+# the patch for the API it already expects.
+#
+#   GHSA-mh99-v99m-4gvg  unbounded expansion            1.x fixed in 1.1.17
+#   GHSA-rgw5-rvv9-x895  bypasses that mitigation       1.x fixed in 1.1.18
+#                                                       5.x fixed in 5.0.9
 overrides:
   sharp: ">=0.35.0"
   postcss: ">=8.5.18"
-
-# GHSA-mh99-v99m-4gvg — brace-expansion DoS via unbounded expansion.
-#
-# Accepted, not ignored. The reasoning, so the next person can re-decide rather
-# than re-discover:
-#
-#   * Reached only through eslint > @eslint/config-array > minimatch. It is a
-#     lint-time dependency; nothing in Zence's runtime or in the published site
-#     touches it.
-#   * Exploiting it needs attacker-controlled glob patterns fed to eslint. The
-#     patterns come from our own eslint.config.mjs.
-#   * The fix exists only in 5.x, which changed the export from a function to an
-#     object — forcing it makes eslint fail with "expand is not a function". The
-#     1.x line is genuinely unpatched: 1.1.16 expands a small input to 1,048,576
-#     items with no limit. Verified, not assumed.
-#
-# Dependabot will open a PR when minimatch moves to a patched major. Revisit
-# then; do not extend this list without writing down why.
-auditConfig:
-  ignoreGhsas:
-    - GHSA-mh99-v99m-4gvg
+  "brace-expansion@^1.0.0": "1.1.18"
+  "brace-expansion@^5.0.0": "5.0.9"
