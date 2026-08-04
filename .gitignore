@@ -52,3 +52,14 @@ brand/.verify-diff.png
 # which is what build.py measures and verify.py diffs against — a second copy
 # would be a second thing to keep in sync.
 zence-logo/
+
+# Video build outputs. The scripts are committed; the frames, clips and the
+# rendered mp4 are large and reproducible from them.
+video/build/s_*/
+video/build/*.mp4
+video/build/*.png
+video/build/*.html
+video/build/_*
+video/build/concat.txt
+video/src/
+video/*.mp4
