@@ -19,7 +19,7 @@ dependencies = [
 [project.optional-dependencies]
 # Only needed when talking to a real DataHub instance. Hook fail-safe paths and
 # every unit/contract test run without this installed.
-datahub = ["acryl-datahub>=1.6.0"]
+datahub = ["acryl-datahub>=1.6.0.17"]
 
 [project.scripts]
 zence-hook = "zence_core.hooks.main:main"

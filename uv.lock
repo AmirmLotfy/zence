@@ -15,7 +15,7 @@ members = [
 
 [[package]]
 name = "acryl-datahub"
-version = "1.6.0.16"
+version = "1.6.0.17"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -51,9 +51,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "typing-inspect" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/33/ff/81a9c70418873b981ca8e173d0bcc95420f7cd7be73aea3a260f07aa8251/acryl_datahub-1.6.0.16.tar.gz", hash = "sha256:ce2c6b2651edc46978e14886c41ce4f1fca99980dfae565c3377ce88c2f67402", size = 4098227, upload-time = "2026-07-27T06:28:10.864Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/21/4b/69cc5d1772586bb2773cc1602272af23f9d01be9ffc70d92880b4670bf3b/acryl_datahub-1.6.0.17.tar.gz", hash = "sha256:1ccbe937af700a6386ad850981794027009e55d6a0fb6586d6b24b380874aa6a", size = 4226939, upload-time = "2026-07-31T20:23:47.804Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/88/2b/850b97520db70ca7ef50455842ba9b69ea27f342263e4f52ab9086d5dd69/acryl_datahub-1.6.0.16-py3-none-any.whl", hash = "sha256:e754d4bd41d971b4ed250c9d42b5a0c6bd07fbffd967cd7874b18f32bea7a944", size = 4890824, upload-time = "2026-07-27T06:28:07.154Z" },
+    { url = "https://files.pythonhosted.org/packages/60/6b/7e52f61af684454c1e81683e3dd632a8f43f4a73858ce925f4d1a417e276/acryl_datahub-1.6.0.17-py3-none-any.whl", hash = "sha256:ce40e9ef523df9b2ef98605d2dbd1aab82957a67938da7b29f9a7c2e8f55bc96", size = 5037564, upload-time = "2026-07-31T20:23:42.183Z" },
 ]
 
 [[package]]
@@ -2400,7 +2400,7 @@ datahub = [
 
 [package.metadata]
 requires-dist = [
-    { name = "acryl-datahub", marker = "extra == 'datahub'", specifier = ">=1.6.0" },
+    { name = "acryl-datahub", marker = "extra == 'datahub'", specifier = ">=1.6.0.17" },
     { name = "pydantic", specifier = ">=2.10" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "regex", specifier = ">=2024.11.6" },
